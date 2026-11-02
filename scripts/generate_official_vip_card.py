@@ -7,6 +7,7 @@ from PIL import Image
 
 base_dir = r"D:\Work\rovy-store"
 public_dir = os.path.join(base_dir, "public")
+artifact_dir = r"C:\Users\Dr Princa\.gemini\antigravity\brain\2d9d53fe-6b03-4ac8-8878-725378cea44d"
 
 # 1. Generate QR codes directly in memory
 web_url = "https://rovy-store.vercel.app"
@@ -41,10 +42,9 @@ apk_qr_b64 = base64.b64encode(buf_apk.getvalue()).decode("ascii")
 # Save QR files to public
 img_web.save(os.path.join(public_dir, "rovy-store-web-qr.png"))
 img_apk.save(os.path.join(public_dir, "rovy-store-apk-qr.png"))
-
 print("Generated QR codes successfully.")
 
-# 2. Luxury HTML Template matching user screenshot exactly
+# 2. HTML Template
 html_content = f"""<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -60,11 +60,10 @@ html_content = f"""<!DOCTYPE html>
     }}
     body {{
       width: 1200px;
-      height: 760px;
       margin: 0;
       padding: 30px;
       background: #040307;
-      font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Cairo', system-ui, -apple-system, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -90,7 +89,6 @@ html_content = f"""<!DOCTYPE html>
       overflow: hidden;
     }}
     
-    /* Decorative inner hairline frame */
     .card::before {{
       content: "";
       position: absolute;
@@ -100,7 +98,6 @@ html_content = f"""<!DOCTYPE html>
       pointer-events: none;
     }}
 
-    /* Ambient background glows */
     .glow-top {{
       position: absolute;
       top: -100px;
@@ -186,7 +183,7 @@ html_content = f"""<!DOCTYPE html>
       box-shadow: 0 0 20px rgba(245, 158, 11, 0.18);
     }}
 
-    /* Dual QR Section - Vertical Card Layout matching user screenshot */
+    /* Dual QR Section */
     .qr-container {{
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -339,9 +336,9 @@ html_content = f"""<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- Dual QR Codes Matching Site Screenshot (Right: Web, Left: APK in RTL) -->
+    <!-- Dual QR Codes -->
     <div class="qr-container">
-      <!-- Web QR (Right side in RTL) -->
+      <!-- Web QR -->
       <div class="qr-box">
         <div class="qr-white-card">
           <img src="data:image/png;base64,{web_qr_b64}" alt="Website QR" />
@@ -355,7 +352,7 @@ html_content = f"""<!DOCTYPE html>
         </div>
       </div>
 
-      <!-- APK QR (Left side in RTL) -->
+      <!-- APK QR -->
       <div class="qr-box">
         <div class="qr-white-card">
           <img src="data:image/png;base64,{apk_qr_b64}" alt="APK QR" />
@@ -416,33 +413,78 @@ template_path = os.path.join(base_dir, "scripts", "card_template.html")
 with open(template_path, "w", encoding="utf-8") as f:
     f.write(html_content)
 
-print(f"Written updated template: {template_path}")
+print(f"Written template: {template_path}")
 
-# Render with Headless Chrome at 2x Scale factor (Retina 2400 x 1520)
-out_png = os.path.join(public_dir, "rovy-store-official-card.png")
+# Render into generous canvas so viewport NEVER truncates
+raw_png = os.path.join(base_dir, "scripts", "raw_render.png")
+file_url = "file:///" + template_path.replace("\\", "/")
+
 chrome_cmd = [
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
     "--headless=new",
     "--disable-gpu",
     "--hide-scrollbars",
-    "--window-size=1200,760",
+    "--window-size=1400,1050",
     "--force-device-scale-factor=2",
-    f"--screenshot={out_png}",
-    f"file:///{template_path.replace(os.sep, '/')}"
+    f"--screenshot={raw_png}",
+    file_url,
 ]
 
-print("Rendering with Google Chrome at 2400x1520...")
+print("Rendering with Google Chrome in generous canvas...")
 res = subprocess.run(chrome_cmd, capture_output=True, text=True)
-print("Chrome code:", res.returncode)
+print("Chrome exit code:", res.returncode)
 
-if os.path.exists(out_png):
-    img = Image.open(out_png)
-    print(f"Generated PNG: {out_png}, Size: {img.size}, Format: {img.format}, FileSize: {os.path.getsize(out_png)} bytes")
+# 3. Detect exact card bounding box and crop with 40px symmetrical margin
+im = Image.open(raw_png)
+w, h = im.size
+pixels = im.load()
 
-    # Save to artifacts directory
-    artifact_dir = r"C:\Users\Dr Princa\.gemini\antigravity\brain\2d9d53fe-6b03-4ac8-8878-725378cea44d"
-    artifact_path = os.path.join(artifact_dir, "rovy-store-official-card.png")
-    with open(out_png, "rb") as fin:
-        with open(artifact_path, "wb") as fout:
-            fout.write(fin.read())
-    print("Copied to artifacts dir:", artifact_path)
+# Search borders from center lines
+top_b = None
+for y in range(h):
+    r, g, b = pixels[w // 2, y][:3]
+    if r > 80 and g > 50 and b < 50:
+        top_b = y
+        break
+
+bottom_b = None
+for y in range(h - 1, 0, -1):
+    r, g, b = pixels[w // 2, y][:3]
+    if r > 80 and g > 50 and b < 50:
+        bottom_b = y
+        break
+
+left_b = None
+for x in range(w):
+    r, g, b = pixels[x, h // 2][:3]
+    if r > 80 and g > 50 and b < 50:
+        left_b = x
+        break
+
+right_b = None
+for x in range(w - 1, 0, -1):
+    r, g, b = pixels[x, h // 2][:3]
+    if r > 80 and g > 50 and b < 50:
+        right_b = x
+        break
+
+print(f"Detected exact borders: top={top_b}, bottom={bottom_b}, left={left_b}, right={right_b}")
+
+# Add uniform 40px padding around the gold border
+pad = 40
+crop_box = (
+    max(0, left_b - pad),
+    max(0, top_b - pad),
+    min(w, right_b + pad),
+    min(h, bottom_b + pad),
+)
+
+final_card = im.crop(crop_box)
+out_png = os.path.join(public_dir, "rovy-store-official-card.png")
+final_card.save(out_png)
+print(f"Saved final cropped card: {out_png}, Size: {final_card.size}")
+
+# Copy to artifacts directory
+artifact_card = os.path.join(artifact_dir, "rovy-store-official-card.png")
+final_card.save(artifact_card)
+print(f"Copied to artifacts: {artifact_card}")
