@@ -46,6 +46,7 @@ export default function LoginPage() {
       if (res.ok && data.success) {
         // Save user to localStorage for client-side state
         localStorage.setItem("rovy_user", JSON.stringify(data.user));
+        window.dispatchEvent(new CustomEvent("rovy_auth_change"));
         router.push("/dashboard");
       } else {
         setErrorMessage(data.error || (isAr ? "فشل تسجيل الدخول" : "Login failed"));

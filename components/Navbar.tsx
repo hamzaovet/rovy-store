@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "../context/LanguageContext";
 import { useCart } from "../context/CartContext";
 import {
@@ -18,9 +19,25 @@ import {
 } from "lucide-react";
 
 export default function Navbar() {
+  const pathname = usePathname();
   const { lang, toggleLanguage, t } = useLanguage();
   const { totalCount, setIsCartOpen } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Hide Navbar completely on ERP Management & POS routes
+  const isErpRoute =
+    pathname === "/dashboard" ||
+    pathname === "/cashier" ||
+    pathname === "/menu-admin" ||
+    pathname === "/inventory" ||
+    pathname === "/reports" ||
+    pathname === "/customers" ||
+    pathname === "/users" ||
+    pathname === "/login";
+
+  if (isErpRoute) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full">

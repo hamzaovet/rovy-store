@@ -113,8 +113,51 @@ model Order {
   status          String   @default("PENDING") // PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED
   paymentMethod   String   @default("COD") // COD (دفع عند الاستلام), INSTAPAY, VODAFONE_CASH
   trackingNumber  String?
+  orderType       String   @default("web") // web, pos, takeaway, phone
+  cashierName     String?
+  courierName     String?
+  courierPhone    String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  description String
+  amount      Float
+  category    String // تغليف وبوكسات، شحن وتوصيل، خامات وزيوت، إعلانات وتسويق، تشغيل ومصروفات
+  expenseDate DateTime @default(now())
+  recordedBy  String?
+  createdAt   DateTime @default(now())
+}
+
+model InventoryItem {
+  id          String   @id @default(cuid())
+  name        String
+  category    String // زجاجات فاخرة، بخاخات، زيوت عطرية، كحول نقي، بوكسات وتغليف، عينات هدايا
+  quantity    Int      @default(0)
+  unit        String   @default("قطعة") // قطعة، مل، لتر، كرتونة، جرام
+  minStock    Int      @default(10)
+  costPerUnit Float    @default(0.0)
+  supplier    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Customer {
+  id            String    @id @default(cuid())
+  name          String
+  phone         String    @unique
+  email         String?
+  city          String?
+  address       String?
+  totalOrders   Int       @default(0)
+  totalSpent    Float     @default(0.0)
+  isVip         Boolean   @default(false)
+  notes         String?
+  lastOrderDate DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Review {

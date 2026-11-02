@@ -17,9 +17,11 @@ export async function POST(req: Request) {
       deliveryFee,
       totalAmount,
       paymentMethod,
+      orderType,
+      cashierName,
     } = body;
 
-    if (!customerName || !customerPhone || !customerAddress || !items || items.length === 0) {
+    if (!customerName || !customerPhone || !items || items.length === 0) {
       return NextResponse.json(
         { error: "بيانات العميل أو المنتجات غير مكتملة" },
         { status: 400 }
@@ -31,19 +33,47 @@ export async function POST(req: Request) {
     const order = await prisma.order.create({
       data: {
         orderNumber,
-        customerName,
-        customerPhone,
+        customerName: customerName.trim(),
+        customerPhone: customerPhone.trim(),
         customerCity: customerCity || "القاهرة والجيزة",
-        customerAddress,
+        customerAddress: customerAddress || "استلام مباشر من البوتيك",
         notes: notes || "",
-        items: JSON.stringify(items),
-        subtotal: Number(subtotal),
-        deliveryFee: Number(deliveryFee),
-        totalAmount: Number(totalAmount),
+        items: typeof items === "string" ? items : JSON.stringify(items),
+        subtotal: Number(subtotal) || 0,
+        deliveryFee: Number(deliveryFee) || 0,
+        totalAmount: Number(totalAmount) || 0,
         paymentMethod: paymentMethod || "COD",
-        status: "PENDING",
+        status: orderType === "pos" ? "DELIVERED" : "PENDING",
+        orderType: orderType || "web",
+        cashierName: cashierName || null,
       },
     });
+
+    // Automatically update or create customer in CRM
+    try {
+      await prisma.customer.upsert({
+        where: { phone: customerPhone.trim() },
+        update: {
+          name: customerName.trim(),
+          totalOrders: { increment: 1 },
+          totalSpent: { increment: Number(totalAmount) || 0 },
+          lastOrderDate: new Date(),
+          city: customerCity || undefined,
+          address: customerAddress || undefined,
+        },
+        create: {
+          name: customerName.trim(),
+          phone: customerPhone.trim(),
+          city: customerCity || "القاهرة",
+          address: customerAddress || null,
+          totalOrders: 1,
+          totalSpent: Number(totalAmount) || 0,
+          lastOrderDate: new Date(),
+        },
+      });
+    } catch (crmErr) {
+      console.error("Auto customer sync error:", crmErr);
+    }
 
     return NextResponse.json({ success: true, order });
   } catch (error: any) {

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "../context/LanguageContext";
 import {
   Phone,
@@ -17,8 +18,24 @@ import {
 import InstagramIcon from "./InstagramIcon";
 
 export default function Footer() {
+  const pathname = usePathname();
   const { lang, t } = useLanguage();
   const isAr = lang === "ar";
+
+  // Hide Footer on ERP routes
+  const isErpRoute =
+    pathname === "/dashboard" ||
+    pathname === "/cashier" ||
+    pathname === "/menu-admin" ||
+    pathname === "/inventory" ||
+    pathname === "/reports" ||
+    pathname === "/customers" ||
+    pathname === "/users" ||
+    pathname === "/login";
+
+  if (isErpRoute) {
+    return null;
+  }
 
   return (
     <footer className="bg-black/90 border-t border-amber-500/20 text-zinc-400 mt-20">

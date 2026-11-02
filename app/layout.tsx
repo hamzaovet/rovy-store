@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { LanguageProvider } from "../context/LanguageContext";
 import { CartProvider } from "../context/CartContext";
+import { StaffProvider } from "../context/StaffContext";
 import Navbar from "../components/Navbar";
 import CartDrawer from "../components/CartDrawer";
 import Footer from "../components/Footer";
@@ -36,12 +37,14 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" className="dark">
       <body className="min-h-screen bg-[#07060a] text-[#f7f4ed] antialiased flex flex-col justify-between selection:bg-amber-500 selection:text-black">
         <LanguageProvider>
-          <CartProvider>
-            <Navbar />
-            <CartDrawer />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </CartProvider>
+          <StaffProvider>
+            <CartProvider>
+              <Navbar />
+              <CartDrawer />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </CartProvider>
+          </StaffProvider>
         </LanguageProvider>
       </body>
     </html>

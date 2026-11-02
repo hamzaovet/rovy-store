@@ -1,750 +1,716 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useLanguage } from "../../context/LanguageContext";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import ErpLayout from "@/components/ErpLayout";
+import ThermalReceiptModal, { printThermalReceipt, PrintableOrder } from "@/components/ThermalReceipt";
+import { playSound } from "@/lib/sounds";
 import {
-  ShieldAlert,
-  ShieldCheck,
-  Power,
-  Users,
-  ShoppingBag,
-  DollarSign,
+  Truck,
   Package,
-  Layers,
-  Sparkles,
-  Phone,
-  CheckCircle2,
-  Clock,
-  Trash2,
-  Edit3,
-  Plus,
   RefreshCw,
-  LogOut,
-  Sliders,
+  Phone,
+  MapPin,
+  Clock,
+  Printer,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  ChevronRight,
+  MessageCircle,
+  Search,
+  Bike,
+  Plus,
+  Send,
+  User,
   ExternalLink,
+  ShieldAlert,
+  Sparkles,
 } from "lucide-react";
 
-export default function DashboardPage() {
-  const { lang, t } = useLanguage();
-  const router = useRouter();
-  const isAr = lang === "ar";
+interface OrderItem {
+  nameAr?: string;
+  nameEn?: string;
+  quantity?: number;
+  qty?: number;
+  price?: number;
+  unitPrice?: number;
+  volume?: string;
+  type?: string;
+}
 
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "users" | "products">("overview");
+interface Order {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  customerCity: string;
+  customerAddress: string;
+  notes?: string;
+  items: string;
+  subtotal: number;
+  deliveryFee: number;
+  totalAmount: number;
+  status: string; // PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED
+  paymentMethod: string;
+  orderType?: string;
+  cashierName?: string;
+  courierName?: string;
+  courierPhone?: string;
+  createdAt: string;
+}
 
-  // State
-  const [isLockdown, setIsLockdown] = useState(false);
-  const [lockdownLoading, setLockdownLoading] = useState(false);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+const STATUS_TABS = [
+  { id: "active", label: "النشطة" },
+  { id: "PENDING", label: "جديد" },
+  { id: "CONFIRMED", label: "قيد التجهيز والتغليف" },
+  { id: "READY", label: "جاهز للتسليم" },
+  { id: "SHIPPED", label: "مع المندوب" },
+  { id: "DELIVERED", label: "تم التسليم والتحصيل" },
+  { id: "CANCELLED", label: "ملغي" },
+];
+
+export default function DashboardOrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTab, setSelectedTab] = useState("active");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  // New User Form Modal State
-  const [showAddUser, setShowAddUser] = useState(false);
-  const [newUsername, setNewUsername] = useState("");
-  const [newName, setNewName] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [newPin, setNewPin] = useState("");
-  const [newRole, setNewRole] = useState("manager");
+  // Thermal Receipt Modal
+  const [receiptOrder, setReceiptOrder] = useState<PrintableOrder | null>(null);
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem("rovy_user");
-    if (!savedUser) {
-      router.push("/login");
-      return;
-    }
+  // Assign Courier Modal
+  const [courierModalOrder, setCourierModalOrder] = useState<Order | null>(null);
+  const [courierName, setCourierName] = useState("");
+  const [courierPhone, setCourierPhone] = useState("");
+  const [savingCourier, setSavingCourier] = useState(false);
+
+  // Delivery Zones Modal
+  const [zonesModalOpen, setZonesModalOpen] = useState(false);
+
+  const prevOrdersCountRef = useRef<number>(0);
+
+  const fetchOrders = useCallback(async () => {
     try {
-      const u = JSON.parse(savedUser);
-      setCurrentUser(u);
-    } catch {
-      router.push("/login");
-    }
+      const res = await fetch("/api/orders");
+      const data = await res.json();
+      const list: Order[] = data.orders || [];
 
-    fetchDashboardData();
-  }, [router]);
-
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    try {
-      // 1. Fetch Lockdown
-      const resLock = await fetch("/api/auth/lockdown");
-      const dataLock = await resLock.json();
-      setIsLockdown(dataLock.isEmergencyLockdown || false);
-
-      // 2. Fetch Orders
-      const resOrders = await fetch("/api/orders");
-      const dataOrders = await resOrders.json();
-      setOrders(dataOrders.orders || []);
-
-      // 3. Fetch Users
-      const resUsers = await fetch("/api/auth/users");
-      const dataUsers = await resUsers.json();
-      setUsers(dataUsers.users || []);
-
-      // 4. Fetch Products
-      const resProds = await fetch("/api/products");
-      const dataProds = await resProds.json();
-      setProducts(dataProds.products || []);
-    } catch (e) {
-      console.error("Dashboard fetch error", e);
+      // Check if new orders arrived to sound alert
+      if (prevOrdersCountRef.current > 0 && list.length > prevOrdersCountRef.current) {
+        playSound("order");
+      }
+      prevOrdersCountRef.current = list.length;
+      setOrders(list);
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Toggle Master Emergency Lockdown (Owner only)
-  const handleToggleLockdown = async () => {
-    if (currentUser?.role !== "owner" && currentUser?.username !== "maestro") {
-      alert(isAr ? "عذراً! صلاحية تفعيل وضع الطوارئ للمالك (المايسترو) فقط." : "Only Owner Maestro can toggle emergency lockdown.");
-      return;
-    }
+  useEffect(() => {
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 10000); // 10s live polling
+    return () => clearInterval(interval);
+  }, [fetchOrders]);
 
-    const confirmMsg = isLockdown
-      ? isAr
-        ? "هل أنت متأكد من إلغاء وضع الطوارئ وإعادة تفعيل دخول كافة الحسابات؟"
-        : "Disable emergency lockdown and restore access for all accounts?"
-      : isAr
-        ? "تحذير أمني: هل أنت متأكد من تفعيل وضع الطوارئ؟ سيتم تعطيل ومنع تسجيل دخول كافة المديرين والموظفين فوراً!"
-        : "SECURITY ALERT: Activate lockdown? All managers and staff accounts will be immediately blocked!";
-
-    if (!window.confirm(confirmMsg)) return;
-
-    setLockdownLoading(true);
+  const updateOrderStatus = async (id: string, newStatus: string) => {
+    setUpdatingId(id);
+    playSound("click");
     try {
-      const res = await fetch("/api/auth/lockdown", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isEmergencyLockdown: !isLockdown }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setIsLockdown(data.isEmergencyLockdown);
-      } else {
-        alert(data.error);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLockdownLoading(false);
-    }
-  };
-
-  // Toggle user active status
-  const handleToggleUser = async (userId: string, currentStatus: boolean) => {
-    try {
-      const res = await fetch("/api/auth/users", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: userId, isActive: !currentStatus }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setUsers(users.map((u) => (u.id === userId ? { ...u, isActive: !currentStatus } : u)));
-      } else {
-        alert(data.error);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  // Delete user
-  const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm(isAr ? "هل أنت متأكد من حذف هذا الحساب نهائياً؟" : "Delete this account permanently?")) {
-      return;
-    }
-    try {
-      const res = await fetch(`/api/auth/users?id=${userId}`, { method: "DELETE" });
-      const data = await res.json();
-      if (res.ok) {
-        setUsers(users.filter((u) => u.id !== userId));
-      } else {
-        alert(data.error);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  // Add new user
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await fetch("/api/auth/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: newUsername,
-          name: newName,
-          password: newPassword,
-          pin: newPin,
-          role: newRole,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setShowAddUser(false);
-        setNewUsername("");
-        setNewName("");
-        setNewPassword("");
-        setNewPin("");
-        fetchDashboardData();
-      } else {
-        alert(data.error);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  // Update order status
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
-    try {
-      const res = await fetch(`/api/orders/${orderId}`, {
+      const res = await fetch(`/api/orders/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
-        setOrders(orders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
+        playSound("success");
+        setOrders((prev) =>
+          prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
+        );
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error("Update status error:", err);
+    } finally {
+      setUpdatingId(null);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("rovy_user");
-    router.push("/login");
+  const handleSaveCourier = async () => {
+    if (!courierModalOrder) return;
+    setSavingCourier(true);
+    playSound("click");
+    try {
+      const res = await fetch(`/api/orders/${courierModalOrder.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courierName: courierName.trim(),
+          courierPhone: courierPhone.trim(),
+          status: "SHIPPED",
+        }),
+      });
+      if (res.ok) {
+        playSound("success");
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === courierModalOrder.id
+              ? {
+                  ...o,
+                  courierName: courierName.trim(),
+                  courierPhone: courierPhone.trim(),
+                  status: "SHIPPED",
+                }
+              : o
+          )
+        );
+        setCourierModalOrder(null);
+        setCourierName("");
+        setCourierPhone("");
+      }
+    } catch (err) {
+      console.error("Courier save error:", err);
+    } finally {
+      setSavingCourier(false);
+    }
   };
 
-  // Metrics
-  const totalSales = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-  const totalOrdersCount = orders.length;
-  const isOwner = currentUser?.role === "owner" || currentUser?.username === "maestro";
+  // Filter Orders by Tab and Search
+  const filteredOrders = orders.filter((order) => {
+    // Tab filter
+    if (selectedTab === "active") {
+      if (order.status === "DELIVERED" || order.status === "CANCELLED") return false;
+    } else if (order.status !== selectedTab) {
+      return false;
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchNum = order.orderNumber.toLowerCase().includes(q);
+      const matchName = order.customerName.toLowerCase().includes(q);
+      const matchPhone = order.customerPhone.includes(q);
+      return matchNum || matchName || matchPhone;
+    }
+
+    return true;
+  });
+
+  // Calculate counts for each tab
+  const getTabCount = (tabId: string) => {
+    if (tabId === "active") {
+      return orders.filter(
+        (o) => o.status !== "DELIVERED" && o.status !== "CANCELLED"
+      ).length;
+    }
+    return orders.filter((o) => o.status === tabId).length;
+  };
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 font-bold text-xs border border-amber-500/30">
-              {currentUser?.name || "المايسترو (المالك)"}
-            </span>
-            <span className="text-xs text-zinc-500 font-mono">@{currentUser?.username}</span>
-          </div>
-          <h1 className="font-serif font-black text-2xl sm:text-3xl text-gold-gradient mt-1">
-            {t("dashboard_title")}
-          </h1>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={fetchDashboardData}
-            className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-amber-500 text-zinc-300 hover:text-amber-400 transition"
-            title="Refresh Data"
-          >
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          </button>
-
-          <Link
-            href="/"
-            className="px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-amber-500 text-xs text-zinc-300 hover:text-amber-400 transition flex items-center gap-1.5"
-          >
-            <ExternalLink size={14} />
-            <span>{isAr ? "عرض المتجر" : "Storefront"}</span>
-          </Link>
-
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 rounded-xl bg-red-950/40 border border-red-500/30 text-xs text-red-300 hover:bg-red-900/60 transition flex items-center gap-1.5"
-          >
-            <LogOut size={14} />
-            <span>{isAr ? "تسجيل خروج" : "Logout"}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* MASTER EMERGENCY LOCKDOWN WIDGET (Owner Special Feature) */}
-      <div
-        className={`p-6 rounded-3xl border transition-all duration-300 shadow-xl ${
-          isLockdown
-            ? "bg-red-950/40 border-red-500/60 shadow-red-950/50"
-            : "glass-luxury border-amber-500/30"
-        }`}
-      >
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-1.5 max-w-2xl">
+    <ErpLayout activeItem="orders">
+      <div className="space-y-6">
+        {/* Header Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#120e1c] via-[#0e0b16] to-[#120e1c] p-5 rounded-2xl border border-amber-500/20 shadow-xl">
+          <div>
             <div className="flex items-center gap-2">
-              {isLockdown ? (
-                <ShieldAlert size={22} className="text-red-400 animate-pulse" />
-              ) : (
-                <ShieldCheck size={22} className="text-emerald-400" />
-              )}
-              <h3 className="font-serif font-black text-lg text-zinc-100">
-                {t("dashboard_emergency_lockdown")}
-              </h3>
-              <span
-                className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
-                  isLockdown
-                    ? "bg-red-500 text-black border-red-400 animate-pulse"
-                    : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                }`}
-              >
-                {isLockdown ? t("dashboard_lockdown_active") : t("dashboard_lockdown_inactive")}
+              <span className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
+                <Truck size={22} />
               </span>
+              <div>
+                <h1 className="text-xl font-black font-serif text-gold-gradient">
+                  شاشة تجهيز الطلبات ولوجستيات التوصيل والشحن
+                </h1>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  إدارة دورة حياة الأوردر — طباعة ريسيت حراري 80mm — تعيين مندوب التوصيل — تحصيل الفلوس
+                </p>
+              </div>
             </div>
-
-            <p className="text-xs text-zinc-300 leading-relaxed font-light">
-              {t("dashboard_emergency_desc")}
-            </p>
           </div>
 
-          <div className="shrink-0">
-            {isOwner ? (
+          {/* Quick Action Buttons */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setZonesModalOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold border border-zinc-700 flex items-center gap-1.5 transition"
+            >
+              <MapPin size={14} className="text-amber-400" />
+              <span>مناطق وتسعيرة الشحن</span>
+            </button>
+
+            <button
+              onClick={() => {
+                playSound("click");
+                fetchOrders();
+              }}
+              className="px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-bold border border-amber-500/30 flex items-center gap-1.5 transition"
+            >
+              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+              <span>تحديث مباشر</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Status Pipeline Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {STATUS_TABS.map((tab) => {
+            const count = getTabCount(tab.id);
+            const isActive = selectedTab === tab.id;
+            return (
               <button
-                onClick={handleToggleLockdown}
-                disabled={lockdownLoading}
-                className={`py-3 px-5 rounded-2xl font-black text-xs flex items-center gap-2 transition shadow-lg ${
-                  isLockdown
-                    ? "bg-emerald-500 hover:bg-emerald-400 text-black"
-                    : "bg-red-600 hover:bg-red-500 text-white"
+                key={tab.id}
+                onClick={() => {
+                  playSound("click");
+                  setSelectedTab(tab.id);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  isActive
+                    ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/25 scale-[1.02]"
+                    : "bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 border border-zinc-800"
                 }`}
               >
-                <Power size={16} />
-                <span>
-                  {lockdownLoading
-                    ? isAr
-                      ? "جاري التحديث..."
-                      : "Updating..."
-                    : isLockdown
-                    ? isAr
-                      ? "إلغاء الطوارئ وتفعيل الحسابات"
-                      : "Disable Lockdown (Enable Accounts)"
-                    : isAr
-                      ? "تفعيل الطوارئ (تعطيل كافة الحسابات)"
-                      : "Enable Master Lockdown (Block All)"}
+                <span>{tab.label}</span>
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10.5px] font-mono font-black ${
+                    isActive
+                      ? "bg-black/25 text-black"
+                      : count > 0
+                      ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                      : "bg-zinc-800 text-zinc-500"
+                  }`}
+                >
+                  {count}
                 </span>
               </button>
-            ) : (
-              <span className="text-xs text-zinc-500 italic">
-                {isAr ? "صلاحية حصرية للمالك فقط" : "Owner only privilege"}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* METRICS ROW */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-luxury p-5 rounded-2xl border border-amber-500/20">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs">{t("dashboard_total_sales")}</span>
-            <DollarSign size={18} className="text-amber-400" />
-          </div>
-          <span className="font-serif font-black text-2xl text-gold-gradient">
-            {totalSales.toLocaleString()} ج.م
-          </span>
+            );
+          })}
         </div>
 
-        <div className="glass-luxury p-5 rounded-2xl border border-amber-500/20">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs">{t("dashboard_total_orders")}</span>
-            <ShoppingBag size={18} className="text-amber-400" />
-          </div>
-          <span className="font-serif font-black text-2xl text-zinc-100">
-            {totalOrdersCount}
-          </span>
+        {/* Search Bar */}
+        <div className="relative max-w-md">
+          <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="بحث برقم الطلب، اسم العميل، أو رقم الهاتف..."
+            className="w-full pr-10 pl-4 py-2 rounded-xl bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-amber-500/50"
+          />
         </div>
 
-        <div className="glass-luxury p-5 rounded-2xl border border-amber-500/20">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs">{t("dashboard_products_count")}</span>
-            <Package size={18} className="text-amber-400" />
+        {/* Orders Cards Grid */}
+        {loading && orders.length === 0 ? (
+          <div className="py-20 text-center text-amber-400">
+            <RefreshCw size={32} className="animate-spin mx-auto mb-3" />
+            <span className="text-xs">جاري تحميل أحدث الطلبات واللوجستيات...</span>
           </div>
-          <span className="font-serif font-black text-2xl text-zinc-100">
-            {products.length}
-          </span>
-        </div>
-
-        <div className="glass-luxury p-5 rounded-2xl border border-amber-500/20">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs">{t("dashboard_users_count")}</span>
-            <Users size={18} className="text-amber-400" />
-          </div>
-          <span className="font-serif font-black text-2xl text-zinc-100">
-            {users.length}
-          </span>
-        </div>
-      </div>
-
-      {/* TABS NAVIGATION */}
-      <div className="flex items-center gap-2 border-b border-zinc-800 pb-2 overflow-x-auto scrollbar-none text-xs font-bold">
-        <button
-          onClick={() => setActiveTab("overview")}
-          className={`px-4 py-2 rounded-xl transition ${
-            activeTab === "overview"
-              ? "btn-gold"
-              : "bg-zinc-900 text-zinc-400 hover:text-white"
-          }`}
-        >
-          {isAr ? "نظرة عامة والطلبات الحديثة" : "Recent Orders"}
-        </button>
-
-        <button
-          onClick={() => setActiveTab("users")}
-          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
-            activeTab === "users"
-              ? "btn-gold"
-              : "bg-zinc-900 text-zinc-400 hover:text-white"
-          }`}
-        >
-          <Users size={14} />
-          <span>{isAr ? "إدارة الحسابات والصلاحيات" : "Accounts & Security"}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("products")}
-          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
-            activeTab === "products"
-              ? "btn-gold"
-              : "bg-zinc-900 text-zinc-400 hover:text-white"
-          }`}
-        >
-          <Package size={14} />
-          <span>{isAr ? "كتالوج العطور والأسعار" : "Perfumes Catalog"}</span>
-        </button>
-      </div>
-
-      {/* TAB CONTENT: ORDERS */}
-      {activeTab === "overview" && (
-        <div className="glass-luxury rounded-3xl border border-amber-500/20 p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-serif font-bold text-lg text-zinc-100">
-              {isAr ? "قائمة أوردرات العطور" : "Orders Log"}
+        ) : filteredOrders.length === 0 ? (
+          <div className="py-24 text-center bg-zinc-900/40 rounded-2xl border border-zinc-800/80 p-8">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4">
+              <Package size={28} />
+            </div>
+            <h3 className="text-base font-bold text-zinc-200 font-serif">
+              لا توجد طلبات في هذا القسم حالياً
             </h3>
-            <span className="text-xs text-zinc-400">
-              {orders.length} {isAr ? "طلب مسجل" : "orders"}
-            </span>
+            <p className="text-xs text-zinc-500 max-w-md mx-auto mt-1">
+              أي طلب جديد من الموقع الإلكتروني أو من شاشة الكاشير سيظهر هنا فوراً مع تنبيه صوتي مستمر 🔔
+            </p>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            {filteredOrders.map((order) => {
+              let parsedItems: OrderItem[] = [];
+              try {
+                parsedItems =
+                  typeof order.items === "string" ? JSON.parse(order.items) : order.items;
+              } catch {
+                parsedItems = [];
+              }
 
-          {orders.length === 0 ? (
-            <div className="text-center py-12 text-zinc-500 text-xs">
-              {isAr ? "لا توجد طلبات مسجلة حتى الآن." : "No orders yet."}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-start">
-                <thead className="bg-zinc-900/80 text-zinc-400 uppercase tracking-wider text-[10px]">
-                  <tr>
-                    <th className="p-3 text-start">{isAr ? "رقم الطلب" : "Order #"}</th>
-                    <th className="p-3 text-start">{isAr ? "العميل" : "Client"}</th>
-                    <th className="p-3 text-start">{isAr ? "الهاتف" : "Phone"}</th>
-                    <th className="p-3 text-start">{isAr ? "العنوان" : "Address"}</th>
-                    <th className="p-3 text-start">{isAr ? "المبلغ" : "Total"}</th>
-                    <th className="p-3 text-start">{isAr ? "طريقة الدفع" : "Payment"}</th>
-                    <th className="p-3 text-start">{isAr ? "الحالة" : "Status"}</th>
-                    <th className="p-3 text-start">{isAr ? "إجراء" : "Action"}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800/80">
-                  {orders.map((o) => (
-                    <tr key={o.id} className="hover:bg-zinc-900/40 transition">
-                      <td className="p-3 font-mono font-bold text-amber-400">{o.orderNumber}</td>
-                      <td className="p-3 font-bold text-zinc-200">{o.customerName}</td>
-                      <td className="p-3 font-mono text-zinc-300">
-                        <a href={`tel:${o.customerPhone}`} className="hover:underline text-amber-300">
-                          {o.customerPhone}
+              const isPOS = order.orderType === "pos";
+              const isDelivered = order.status === "DELIVERED";
+              const isCancelled = order.status === "CANCELLED";
+
+              // WhatsApp greeting URL
+              const cleanPhone = order.customerPhone.replace(/\D/g, "");
+              const waPhone = cleanPhone.startsWith("0") ? `2${cleanPhone}` : cleanPhone;
+              const waMsg = encodeURIComponent(
+                `مرحباً ${order.customerName}، معكم روفي ستور للعطور الفاخرة 👑 بخصوص طلبكم رقم #${order.orderNumber}.`
+              );
+              const waUrl = `https://wa.me/${waPhone}?text=${waMsg}`;
+
+              return (
+                <div
+                  key={order.id}
+                  className="bg-[#0e0b16] rounded-2xl border border-amber-500/20 hover:border-amber-500/40 transition-all p-5 shadow-lg flex flex-col justify-between space-y-4"
+                >
+                  {/* Top Bar: Order Number, Badge, Time */}
+                  <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono font-black text-sm text-amber-400">
+                        #{order.orderNumber}
+                      </span>
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                          isPOS
+                            ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                            : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        }`}
+                      >
+                        {isPOS ? "🛒 كاشير فوري" : "🌐 متجر أونلاين"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10.5px] px-2.5 py-0.5 rounded-full font-bold ${
+                          order.status === "DELIVERED"
+                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                            : order.status === "SHIPPED"
+                            ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+                            : order.status === "CONFIRMED"
+                            ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                            : order.status === "CANCELLED"
+                            ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                            : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                        }`}
+                      >
+                        {order.status === "PENDING"
+                          ? "جديد"
+                          : order.status === "CONFIRMED"
+                          ? "قيد التجهيز الفاخر"
+                          : order.status === "READY"
+                          ? "جاهز للشحن"
+                          : order.status === "SHIPPED"
+                          ? "مع المندوب"
+                          : order.status === "DELIVERED"
+                          ? "تم التسليم والتحصيل"
+                          : "ملغي"}
+                      </span>
+
+                      <span className="text-[11px] text-zinc-500 flex items-center gap-1 font-mono">
+                        <Clock size={11} />
+                        {new Date(order.createdAt).toLocaleTimeString("ar-EG", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Customer Information with Direct WhatsApp Action */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-zinc-900/60 p-3 rounded-xl border border-zinc-800">
+                    <div>
+                      <div className="text-zinc-400 text-[11px]">العميل:</div>
+                      <div className="font-bold text-zinc-200 mt-0.5">{order.customerName}</div>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <a
+                          href={`tel:${order.customerPhone}`}
+                          className="text-amber-400 font-mono hover:underline flex items-center gap-1"
+                        >
+                          <Phone size={11} />
+                          <span>{order.customerPhone}</span>
                         </a>
-                      </td>
-                      <td className="p-3 text-zinc-400 max-w-xs truncate">
-                        {o.customerCity} - {o.customerAddress}
-                      </td>
-                      <td className="p-3 font-bold text-gold-gradient">{o.totalAmount} ج.م</td>
-                      <td className="p-3 text-zinc-300">{o.paymentMethod}</td>
-                      <td className="p-3">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            o.status === "DELIVERED"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : o.status === "SHIPPED"
-                              ? "bg-blue-500/20 text-blue-400"
-                              : o.status === "CANCELLED"
-                              ? "bg-red-500/20 text-red-400"
-                              : "bg-amber-500/20 text-amber-400"
-                          }`}
+                        <a
+                          href={waUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => playSound("pop")}
+                          className="px-2 py-0.5 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1 transition"
                         >
-                          {o.status}
+                          <MessageCircle size={10} />
+                          <span>واتساب</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-zinc-400 text-[11px]">عنوان التوصيل:</div>
+                      <div className="font-medium text-zinc-300 mt-0.5 flex items-start gap-1">
+                        <MapPin size={12} className="text-amber-400 mt-0.5 shrink-0" />
+                        <span>
+                          {order.customerCity} - {order.customerAddress}
                         </span>
-                      </td>
-                      <td className="p-3">
-                        <select
-                          value={o.status}
-                          onChange={(e) => handleUpdateOrderStatus(o.id, e.target.value)}
-                          className="bg-zinc-900 border border-zinc-700 text-zinc-300 rounded-lg p-1 text-[11px] outline-none"
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Order Items Table */}
+                  <div className="space-y-1.5">
+                    <div className="text-[11px] font-bold text-zinc-400 flex items-center justify-between">
+                      <span>الأصناف المطلوبة ({parsedItems.length}):</span>
+                      <span>طريقة الدفع: {order.paymentMethod}</span>
+                    </div>
+                    <div className="divide-y divide-zinc-800/80 rounded-xl bg-black/40 border border-zinc-800/60 p-2 text-xs">
+                      {parsedItems.map((item, idx) => (
+                        <div key={idx} className="py-1.5 flex items-center justify-between gap-2">
+                          <div>
+                            <span className="font-bold text-zinc-200">
+                              {item.nameAr || item.nameEn}
+                            </span>
+                            <span className="text-[10px] text-zinc-400 mr-2">
+                              {item.volume || "100 ml"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-amber-400 font-mono font-bold">
+                              × {item.quantity || item.qty || 1}
+                            </span>
+                            <span className="text-zinc-300 font-mono">
+                              {(item.price || item.unitPrice || 0) *
+                                (item.quantity || item.qty || 1)}{" "}
+                              ج.م
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Courier info if assigned */}
+                  {order.courierName && (
+                    <div className="p-2.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-xs flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-cyan-300">
+                        <Bike size={14} />
+                        <span>المندوب: <strong>{order.courierName}</strong></span>
+                        {order.courierPhone && (
+                          <span className="font-mono text-[11px]">({order.courierPhone})</span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-cyan-400 font-bold">شحنة جارية</span>
+                    </div>
+                  )}
+
+                  {/* Financial Summary & Actions */}
+                  <div className="border-t border-zinc-800/80 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xs text-zinc-400">الإجمالي النهائي:</span>
+                      <span className="font-serif font-black text-lg text-gold-gradient">
+                        {order.totalAmount} ج.م
+                      </span>
+                      {order.deliveryFee > 0 && (
+                        <span className="text-[10px] text-zinc-500">
+                          (شامل {order.deliveryFee} شحن)
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Print 80mm Receipt */}
+                      <button
+                        onClick={() => {
+                          playSound("click");
+                          printThermalReceipt(order);
+                        }}
+                        className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-amber-300 text-xs font-bold border border-zinc-700 flex items-center gap-1.5 transition"
+                        title="طباعة ريسيت حراري 80mm"
+                      >
+                        <Printer size={15} />
+                        <span className="text-[11px]">فاتورة 80mm</span>
+                      </button>
+
+                      {/* State transitions */}
+                      {order.status === "PENDING" && (
+                        <button
+                          disabled={updatingId === order.id}
+                          onClick={() => updateOrderStatus(order.id, "CONFIRMED")}
+                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:brightness-110 text-white font-bold text-xs shadow-md transition"
                         >
-                          <option value="PENDING">PENDING (قيد المراجعة)</option>
-                          <option value="CONFIRMED">CONFIRMED (مؤكد)</option>
-                          <option value="SHIPPED">SHIPPED (خرج للشحن)</option>
-                          <option value="DELIVERED">DELIVERED (تم التسليم)</option>
-                          <option value="CANCELLED">CANCELLED (ملغي)</option>
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          تجهيز وتغليف 🎁
+                        </button>
+                      )}
+
+                      {order.status === "CONFIRMED" && (
+                        <button
+                          disabled={updatingId === order.id}
+                          onClick={() => updateOrderStatus(order.id, "READY")}
+                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-black font-bold text-xs shadow-md transition"
+                        >
+                          جاهز للشحن 📦
+                        </button>
+                      )}
+
+                      {(order.status === "READY" || order.status === "CONFIRMED") && (
+                        <button
+                          onClick={() => {
+                            playSound("click");
+                            setCourierModalOrder(order);
+                            setCourierName(order.courierName || "");
+                            setCourierPhone(order.courierPhone || "");
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-700 hover:brightness-110 text-white font-bold text-xs shadow-md flex items-center gap-1 transition"
+                        >
+                          <Bike size={13} />
+                          <span>تعيين المندوب 🛵</span>
+                        </button>
+                      )}
+
+                      {order.status === "SHIPPED" && (
+                        <button
+                          disabled={updatingId === order.id}
+                          onClick={() => updateOrderStatus(order.id, "DELIVERED")}
+                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:brightness-110 text-black font-bold text-xs shadow-md flex items-center gap-1 transition"
+                        >
+                          <CheckCircle2 size={13} />
+                          <span>تم التسليم والتحصيل ✅</span>
+                        </button>
+                      )}
+
+                      {!isDelivered && !isCancelled && (
+                        <button
+                          disabled={updatingId === order.id}
+                          onClick={() => {
+                            if (confirm("هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟")) {
+                              updateOrderStatus(order.id, "CANCELLED");
+                            }
+                          }}
+                          className="p-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/50 text-red-400 border border-red-500/30 text-xs transition"
+                          title="إلغاء الطلب"
+                        >
+                          <XCircle size={15} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Courier Modal */}
+      {courierModalOrder && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-[#120e1c] border border-amber-500/30 rounded-2xl p-6 shadow-2xl relative">
+            <h3 className="text-base font-bold text-amber-300 font-serif mb-3 flex items-center gap-2">
+              <Bike size={20} className="text-amber-400" />
+              <span>تعيين مندوب الشحن / شركة التوصيل</span>
+            </h3>
+            <p className="text-xs text-zinc-400 mb-4">
+              للطلب رقم #{courierModalOrder.orderNumber} — العميل {courierModalOrder.customerName} (
+              {courierModalOrder.customerCity})
+            </p>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-zinc-300 mb-1 font-medium">اسم المندوب أو شركة الشحن:</label>
+                <input
+                  type="text"
+                  value={courierName}
+                  onChange={(e) => setCourierName(e.target.value)}
+                  placeholder="مثال: كابتن أحمد / شركة بوسطة إكسبريس"
+                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-zinc-300 mb-1 font-medium">رقم هاتف المندوب (اختياري):</label>
+                <input
+                  type="tel"
+                  value={courierPhone}
+                  onChange={(e) => setCourierPhone(e.target.value)}
+                  placeholder="01012345678"
+                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              {/* Quick courier chips */}
+              <div className="pt-2">
+                <span className="text-[11px] text-zinc-500 block mb-1.5">اقتراحات سريعة:</span>
+                <div className="flex gap-2 flex-wrap">
+                  {["بوسطة إكسبريس (Bosta)", "أرامكس (Aramex)", "كابتن أحمد (الأسطول الخاص)", "كابتن محمود"].map(
+                    (chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => setCourierName(chip)}
+                        className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10.5px] border border-zinc-700"
+                      >
+                        {chip}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
             </div>
-          )}
+
+            <div className="flex gap-3 mt-6">
+              <button
+                disabled={savingCourier || !courierName.trim()}
+                onClick={handleSaveCourier}
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-black font-bold text-xs disabled:opacity-50"
+              >
+                {savingCourier ? "جاري الحفظ..." : "تأكيد وإسناد الشحنة 🚀"}
+              </button>
+              <button
+                onClick={() => setCourierModalOrder(null)}
+                className="px-4 py-2.5 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white text-xs font-medium"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* TAB CONTENT: USERS (Account & Security Matrix) */}
-      {activeTab === "users" && (
-        <div className="glass-luxury rounded-3xl border border-amber-500/20 p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-            <div>
-              <h3 className="font-serif font-bold text-lg text-zinc-100">
-                {isAr ? "منظومة الحسابات وكود الأمان (PIN Matrix)" : "Accounts & Security Roles"}
-              </h3>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                {isAr
-                  ? "إدارة حساب المالك، مديري التشغيل، الموظفين، وإمكانية إضافة أو تعطيل أي حساب."
-                  : "Manage Owner, Operations Managers, Staff, with expandable account creation."}
-              </p>
+      {/* Zones Information Modal */}
+      {zonesModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-[#120e1c] border border-amber-500/30 rounded-2xl p-6 shadow-2xl relative text-xs">
+            <h3 className="text-base font-bold text-amber-300 font-serif mb-3 flex items-center gap-2">
+              <MapPin size={20} className="text-amber-400" />
+              <span>مناطق وتكلفة الشحن (روفي ستور)</span>
+            </h3>
+
+            <div className="space-y-2 mt-4">
+              <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 flex justify-between items-center">
+                <div>
+                  <div className="font-bold text-zinc-200">القاهرة الكبرى والجيزة</div>
+                  <div className="text-[10.5px] text-zinc-400">توصيل خلال 24 ساعة</div>
+                </div>
+                <div className="font-mono font-bold text-amber-400">50 ج.م</div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 flex justify-between items-center">
+                <div>
+                  <div className="font-bold text-zinc-200">الإسكندرية والبحيرة</div>
+                  <div className="text-[10.5px] text-zinc-400">توصيل خلال 48 ساعة</div>
+                </div>
+                <div className="font-mono font-bold text-amber-400">65 ج.م</div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 flex justify-between items-center">
+                <div>
+                  <div className="font-bold text-zinc-200">مدن القناة والدلتا</div>
+                  <div className="text-[10.5px] text-zinc-400">توصيل خلال 48-72 ساعة</div>
+                </div>
+                <div className="font-mono font-bold text-amber-400">70 ج.م</div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 flex justify-between items-center">
+                <div>
+                  <div className="font-bold text-zinc-200">الصعيد والمحافظات البعيدة</div>
+                  <div className="text-[10.5px] text-zinc-400">توصيل خلال 3-4 أيام</div>
+                </div>
+                <div className="font-mono font-bold text-amber-400">85 ج.م</div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-center font-bold">
+                ✨ شحن مجاني لكافة المحافظات لأي طلب بقيمة 1500 ج.م فأكثر ✨
+              </div>
             </div>
 
             <button
-              onClick={() => setShowAddUser(true)}
-              className="py-2.5 px-4 rounded-xl btn-gold text-xs font-bold flex items-center gap-1.5 shadow-lg"
+              onClick={() => setZonesModalOpen(false)}
+              className="w-full mt-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold"
             >
-              <Plus size={15} />
-              <span>{isAr ? "إضافة حساب جديد" : "Add User"}</span>
+              إغلاق
             </button>
           </div>
-
-          {/* Add User Modal */}
-          {showAddUser && (
-            <div className="p-5 rounded-2xl bg-zinc-900 border border-amber-500/40 space-y-4">
-              <h4 className="font-bold text-sm text-amber-300">
-                {isAr ? "تسجيل حساب تشغيل جديد" : "Create New Account"}
-              </h4>
-              <form onSubmit={handleCreateUser} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
-                <input
-                  type="text"
-                  required
-                  placeholder={isAr ? "الاسم بالكامل" : "Full Name"}
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-100 outline-none"
-                />
-                <input
-                  type="text"
-                  required
-                  placeholder={isAr ? "اسم المستخدم (User)" : "Username"}
-                  value={newUsername}
-                  onChange={(e) => setNewUsername(e.target.value)}
-                  className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-100 outline-none"
-                />
-                <input
-                  type="password"
-                  required
-                  placeholder={isAr ? "كلمة المرور" : "Password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-100 outline-none font-mono"
-                />
-                <input
-                  type="password"
-                  required
-                  maxLength={8}
-                  placeholder={isAr ? "كود الأمان PIN" : "Security PIN"}
-                  value={newPin}
-                  onChange={(e) => setNewPin(e.target.value)}
-                  className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-100 outline-none font-mono tracking-widest"
-                />
-                <div className="flex gap-2">
-                  <select
-                    value={newRole}
-                    onChange={(e) => setNewRole(e.target.value)}
-                    className="flex-1 p-2.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-100 outline-none"
-                  >
-                    <option value="manager">{isAr ? "مدير تشغيل" : "Manager"}</option>
-                    <option value="staff">{isAr ? "كاشير / موظف" : "Staff"}</option>
-                  </select>
-                  <button
-                    type="submit"
-                    className="px-4 py-2.5 rounded-lg btn-gold font-bold text-xs"
-                  >
-                    {isAr ? "حفظ" : "Save"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddUser(false)}
-                    className="px-3 py-2.5 rounded-lg bg-zinc-800 text-zinc-400 text-xs"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Users Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-start">
-              <thead className="bg-zinc-900/80 text-zinc-400 uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="p-3 text-start">{isAr ? "الاسم" : "Name"}</th>
-                  <th className="p-3 text-start">{isAr ? "اسم الدخول" : "Username"}</th>
-                  <th className="p-3 text-start">{isAr ? "الدور" : "Role"}</th>
-                  <th className="p-3 text-start">{isAr ? "كود الأمان PIN" : "PIN Code"}</th>
-                  <th className="p-3 text-start">{isAr ? "حالة الحساب" : "Account Status"}</th>
-                  <th className="p-3 text-start">{isAr ? "تحكم الحساب" : "Controls"}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/80">
-                {users.map((u) => {
-                  const isMaestro = u.username === "maestro";
-                  return (
-                    <tr key={u.id} className="hover:bg-zinc-900/40 transition">
-                      <td className="p-3 font-bold text-zinc-100 flex items-center gap-2">
-                        {isMaestro && <span className="text-amber-400">👑</span>}
-                        <span>{u.name}</span>
-                      </td>
-                      <td className="p-3 font-mono text-amber-300 font-bold">{u.username}</td>
-                      <td className="p-3">
-                        <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                            u.role === "owner"
-                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                              : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                          }`}
-                        >
-                          {u.role}
-                        </span>
-                      </td>
-                      <td className="p-3 font-mono tracking-widest text-zinc-400">
-                        {isOwner ? u.pin : "••••••"}
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            u.isActive
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : "bg-red-500/20 text-red-400"
-                          }`}
-                        >
-                          {u.isActive ? (isAr ? "نشط" : "Active") : (isAr ? "معطل" : "Disabled")}
-                        </span>
-                      </td>
-                      <td className="p-3 flex items-center gap-2">
-                        {!isMaestro && isOwner && (
-                          <>
-                            <button
-                              onClick={() => handleToggleUser(u.id, u.isActive)}
-                              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition ${
-                                u.isActive
-                                  ? "bg-red-950/40 border-red-500/30 text-red-400 hover:bg-red-900/60"
-                                  : "bg-emerald-950/40 border-emerald-500/30 text-emerald-400 hover:bg-emerald-900/60"
-                              }`}
-                            >
-                              {u.isActive ? (isAr ? "تعطيل الحساب" : "Disable") : (isAr ? "تفعيل" : "Enable")}
-                            </button>
-
-                            <button
-                              onClick={() => handleDeleteUser(u.id)}
-                              className="p-1 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-800"
-                              title="Delete"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </>
-                        )}
-                        {isMaestro && (
-                          <span className="text-[10px] text-amber-400 font-bold">
-                            {isAr ? "حساب المالك الرئيسي المحمي" : "Protected Owner"}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
-
-      {/* TAB CONTENT: PRODUCTS */}
-      {activeTab === "products" && (
-        <div className="glass-luxury rounded-3xl border border-amber-500/20 p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-            <h3 className="font-serif font-bold text-lg text-zinc-100">
-              {isAr ? "قائمة العطور والأسعار" : "Fragrances Catalog"}
-            </h3>
-            <span className="text-xs text-zinc-400">
-              {products.length} {isAr ? "عطر معروض" : "perfumes"}
-            </span>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-start">
-              <thead className="bg-zinc-900/80 text-zinc-400 uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="p-3 text-start">{isAr ? "العطر" : "Fragrance"}</th>
-                  <th className="p-3 text-start">{isAr ? "البراند" : "Brand"}</th>
-                  <th className="p-3 text-start">{isAr ? "درجة الأصالة" : "Authenticity"}</th>
-                  <th className="p-3 text-start">{isAr ? "الحجم والتركيز" : "Volume & Concentration"}</th>
-                  <th className="p-3 text-start">{isAr ? "السعر الحالي" : "Price"}</th>
-                  <th className="p-3 text-start">{isAr ? "المخزون" : "Stock"}</th>
-                  <th className="p-3 text-start">{isAr ? "عرض" : "Link"}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/80">
-                {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-zinc-900/40 transition">
-                    <td className="p-3 font-bold text-zinc-200">
-                      {isAr ? p.nameAr : p.nameEn}
-                    </td>
-                    <td className="p-3 text-amber-300 font-serif">
-                      {isAr ? p.brandAr : p.brandEn}
-                    </td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-zinc-700 text-[10px] text-zinc-300 font-semibold">
-                        {p.type}
-                      </span>
-                    </td>
-                    <td className="p-3 text-zinc-400">
-                      {p.volume} • {p.concentration}
-                    </td>
-                    <td className="p-3 font-bold text-gold-gradient">{p.price} ج.م</td>
-                    <td className="p-3">
-                      <span className="text-emerald-400 font-bold">
-                        {p.stockQuantity} {isAr ? "زجاجة" : "pcs"}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      <Link
-                        href={`/product/${p.slug}`}
-                        target="_blank"
-                        className="text-amber-400 hover:underline flex items-center gap-1"
-                      >
-                        <span>{isAr ? "معاينة" : "View"}</span>
-                        <ExternalLink size={12} />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-    </div>
+    </ErpLayout>
   );
 }
