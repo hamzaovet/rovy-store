@@ -15,6 +15,7 @@ import {
   Download,
   CreditCard,
   Lock,
+  MapPin,
 } from "lucide-react";
 import InstagramIcon from "./InstagramIcon";
 
@@ -43,12 +44,14 @@ export default function Footer() {
     return null;
   }
 
-  const phoneDisplay = settings.hotline || settings.whatsappPhone || "01000000000";
+  const phoneDisplay = settings.hotline || settings.whatsappPhone || "01503012856";
+  const secondaryPhoneDisplay = settings.secondaryPhone || "01556718249";
   const cleanPhone = phoneDisplay.replace(/\D/g, "");
   const waNumber = cleanPhone.startsWith("0") ? `2${cleanPhone}` : cleanPhone;
   const instagram = settings.instagramHandle || "rovystore2";
+  const mapsUrl = settings.googleMapsUrl || "https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7";
   const addressText = isAr
-    ? settings.addressAr || "القاهرة والشيخ زايد — شحن سريع لمصر كلها"
+    ? settings.addressAr || "6 أكتوبر — الحي الرابع (شارع مجلس الدولة) — الجيزة"
     : settings.addressEn || "Cairo & Sheikh Zayed — Express Delivery All Egypt";
   const hoursText = isAr
     ? settings.workingHoursAr || "يومياً من 10 صباحاً وحتى 12 منتصف الليل"
@@ -259,9 +262,15 @@ export default function Footer() {
               </a>
             </p>
             <div className="pt-2">
-              <span className="inline-block px-3 py-1.5 rounded-lg bg-amber-950/40 border border-amber-500/20 text-amber-300 text-[11px] font-semibold">
-                {addressText}
-              </span>
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-950/40 border border-amber-500/20 text-amber-300 text-[11px] font-semibold hover:bg-amber-900/40 hover:border-amber-400/50 transition group"
+              >
+                <MapPin size={12} className="text-amber-400 group-hover:scale-110 transition shrink-0" />
+                <span>{addressText}</span>
+              </a>
             </div>
           </div>
         </div>

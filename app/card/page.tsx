@@ -16,6 +16,7 @@ import {
   QrCode,
   ArrowRight,
   ArrowLeft,
+  Navigation,
 } from "lucide-react";
 import InstagramIcon from "../../components/InstagramIcon";
 
@@ -27,6 +28,7 @@ export default function VipCardPage() {
 
   const webUrl = "https://rovy-store.vercel.app";
   const apkUrl = "https://github.com/hamzaovet/rovy-store/releases/download/v1.0.0/rovy-store.apk";
+  const mapsUrl = settings.googleMapsUrl || "https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7";
 
   const handlePrint = () => {
     window.print();
@@ -45,38 +47,34 @@ export default function VipCardPage() {
         </h1>
         <p className="text-xs text-zinc-400">
           {isAr
-            ? "يحتوي على 2 كيو ار كود: كود مباشر لزيارة الموقع، وكود فوري لتحميل تطبيق الأندرويد الرسمي."
+            ? "يحتوي على 2 كيو ار كود: كود مباشر لزيارة الموقع، وكود فوري لتحميل تطبيق الأندرويد الرسمي مع اللوكيشن وبيانات التواصل المعتمدة."
             : "Features Dual QR Codes: Instant Website Access & Direct Android APK Download."}
         </p>
       </div>
 
-      {/* THE LUXURY VIP CARD */}
+      {/* The Printable VIP Card */}
       <div
         ref={cardRef}
-        className="relative mx-auto max-w-2xl w-full rounded-3xl overflow-hidden glass-luxury-gold p-8 border-2 border-amber-500/40 shadow-2xl space-y-8"
-        style={{
-          background: "radial-gradient(circle at top right, #1d1726 0%, #0c0912 60%, #050407 100%)",
-        }}
+        id="vip-card"
+        className="relative max-w-2xl mx-auto rounded-3xl p-8 sm:p-10 border border-amber-500/40 bg-gradient-to-br from-[#120e1f] via-[#090710] to-[#040306] shadow-[0_0_50px_rgba(245,158,11,0.15)] overflow-hidden space-y-8"
       >
-        {/* Subtle Gold Frame Lines */}
-        <div className="absolute inset-3 rounded-2xl border border-amber-500/20 pointer-events-none" />
-        <div className="absolute inset-4 rounded-xl border border-amber-500/10 pointer-events-none" />
+        {/* Glow ambient background effects */}
+        <div className="absolute -top-24 -left-24 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Top Header of Card */}
+        {/* Top Header: Brand Logo & Title */}
         <div className="relative z-10 flex items-center justify-between border-b border-amber-500/20 pb-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-700 p-0.5 shadow-xl">
-              <div className="w-full h-full bg-[#0a080e] rounded-[14px] flex items-center justify-center">
-                <span className="text-amber-400 font-serif font-black text-3xl">R</span>
-              </div>
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-black text-2xl shadow-lg border border-amber-300/40">
+              R
             </div>
             <div>
-              <h2 className="font-serif font-black text-2xl text-gold-gradient tracking-wide">
-                ROVY STORE
+              <h2 className="font-serif font-black text-xl sm:text-2xl text-gold-gradient tracking-wide">
+                {isAr ? "روفي ستور" : "Rovy Store"}
               </h2>
-              <span className="text-xs uppercase tracking-widest text-amber-400 font-semibold block -mt-0.5">
-                {isAr ? "روفي ستور — بوتيك العطور الفاخرة" : "Haute Parfumerie Boutique"}
-              </span>
+              <p className="text-xs text-amber-400/90 tracking-widest font-sans font-medium uppercase">
+                {isAr ? "بوتيك العطور الفاخرة والبدائل الملكية" : "Haute Parfumerie & Inspired Luxury"}
+              </p>
             </div>
           </div>
 
@@ -135,20 +133,49 @@ export default function VipCardPage() {
         </div>
 
         {/* Bottom Contacts & Location */}
-        <div className="relative z-10 border-t border-amber-500/20 pt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-zinc-300 text-center sm:text-start">
-          <div className="flex items-center justify-center sm:justify-start gap-2">
-            <Phone size={15} className="text-amber-400 shrink-0" />
-            <span className="font-mono font-bold">{settings.hotline || settings.whatsappPhone}</span>
+        <div className="relative z-10 border-t border-amber-500/20 pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-zinc-300 text-center sm:text-start">
+          <div className="flex flex-col items-center sm:items-start gap-1">
+            <div className="flex items-center gap-2">
+              <Phone size={15} className="text-amber-400 shrink-0" />
+              <span className="font-mono font-bold text-zinc-100">
+                {settings.hotline || "01503012856"}
+              </span>
+            </div>
+            {settings.secondaryPhone && (
+              <span className="font-mono text-[11px] text-zinc-400 pr-5">
+                واتس وأوردرات: {settings.secondaryPhone}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center justify-center sm:justify-start gap-2">
             <InstagramIcon size={15} className="text-amber-400 shrink-0" />
-            <span className="font-medium">@{settings.instagramHandle || "rovystore2"}</span>
+            <a
+              href={`https://www.instagram.com/${settings.instagramHandle || "rovystore2"}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium hover:text-amber-400 transition"
+            >
+              @{settings.instagramHandle || "rovystore2"}
+            </a>
           </div>
 
-          <div className="flex items-center justify-center sm:justify-start gap-2">
-            <MapPin size={15} className="text-amber-400 shrink-0" />
-            <span className="text-[11px]">{isAr ? settings.addressAr : settings.addressEn}</span>
+          <div className="flex flex-col items-center sm:items-start gap-1">
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 hover:text-amber-400 transition"
+            >
+              <MapPin size={15} className="text-amber-400 shrink-0" />
+              <span className="text-[11px] line-clamp-1 underline decoration-amber-500/40">
+                {isAr ? (settings.addressAr || "6 أكتوبر — الحي الرابع (شارع مجلس الدولة)") : settings.addressEn}
+              </span>
+            </a>
+            <span className="text-[10px] text-emerald-400/80 pr-5 flex items-center gap-1">
+              <Navigation size={10} />
+              <span>موقع معتمد على Google Maps</span>
+            </span>
           </div>
         </div>
       </div>
@@ -164,9 +191,19 @@ export default function VipCardPage() {
         </button>
 
         <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="py-3 px-6 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold hover:bg-amber-500/25 transition flex items-center gap-2"
+        >
+          <MapPin size={16} />
+          <span>{isAr ? "فتح موقعنا على خرائط جوجل 📍" : "Open on Google Maps"}</span>
+        </a>
+
+        <a
           href="/api/download/apk"
           download="rovy-store.apk"
-          className="py-3 px-6 rounded-xl bg-zinc-900 border border-amber-500/30 text-amber-300 text-xs font-bold hover:bg-zinc-800 transition flex items-center gap-2"
+          className="py-3 px-6 rounded-xl bg-zinc-900 border border-amber-500/30 text-emerald-400 text-xs font-bold hover:bg-zinc-800 transition flex items-center gap-2"
         >
           <Download size={16} />
           <span>{isAr ? "تحميل ملف APK مباشرة" : "Direct Download APK"}</span>

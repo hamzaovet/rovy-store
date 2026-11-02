@@ -15,10 +15,12 @@ export async function GET() {
           id: "rovy_settings",
           storeNameAr: "روفي ستور — للعطور الفاخرة",
           storeNameEn: "Rovy Store — Luxury Fragrances",
-          whatsappPhone: "01000000000",
-          hotline: "01000000000",
-          addressAr: "القاهرة والشيخ زايد — شحن سريع لجميع المحافظات",
-          addressEn: "Cairo & Sheikh Zayed — Express Delivery All Egypt",
+          whatsappPhone: "01503012856",
+          hotline: "01503012856",
+          secondaryPhone: "01556718249",
+          googleMapsUrl: "https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7",
+          addressAr: "6 أكتوبر — الحي الرابع (شارع مجلس الدولة) — الجيزة",
+          addressEn: "6th of October — 4th District (Council of State St) — Giza",
           workingHoursAr: "يومياً من 10 صباحاً وحتى 12 منتصف الليل",
           workingHoursEn: "Daily from 10:00 AM to 12:00 Midnight",
           instagramHandle: "rovystore2",
@@ -48,6 +50,8 @@ export async function PATCH(req: Request) {
     if (body.taglineEn !== undefined) updateData.taglineEn = body.taglineEn;
     if (body.whatsappPhone !== undefined) updateData.whatsappPhone = body.whatsappPhone.trim();
     if (body.hotline !== undefined) updateData.hotline = body.hotline.trim();
+    if (body.secondaryPhone !== undefined) updateData.secondaryPhone = body.secondaryPhone.trim();
+    if (body.googleMapsUrl !== undefined) updateData.googleMapsUrl = body.googleMapsUrl.trim();
     if (body.addressAr !== undefined) updateData.addressAr = body.addressAr;
     if (body.addressEn !== undefined) updateData.addressEn = body.addressEn;
     if (body.workingHoursAr !== undefined) updateData.workingHoursAr = body.workingHoursAr;

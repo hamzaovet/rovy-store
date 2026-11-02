@@ -33,41 +33,26 @@ model User {
 }
 
 model StoreSettings {
-  id String @id @default("rovy_settings")
-
-  isEmergencyLockdown Boolean @default(false)
-
-  storeNameAr String @default("روفي ستور — للعطور الفاخرة")
-
-  storeNameEn String @default("Rovy Store — Luxury Fragrances")
-
-  taglineAr String @default("أفخم العطور العالمية والبدائل المستوحاة بثبات وأصالة لا تُقاوم")
-
-  taglineEn String @default("Ultra-luxury designer & inspired niche fragrances")
-
-  whatsappPhone String @default("01000000000")
-
-  hotline String @default("01000000000")
-
-  deliveryFee Float @default(50.0)
-
-  freeShippingThreshold Float @default(1500.0)
-
-  addressAr String @default("القاهرة والشيخ زايد — شحن سريع لجميع المحافظات")
-
-  addressEn String @default("Cairo & Sheikh Zayed — Express Delivery All Egypt")
-
-  workingHoursAr String @default("يومياً من 10 صباحاً وحتى 12 منتصف الليل")
-
-  workingHoursEn String @default("Daily from 10:00 AM to 12:00 Midnight")
-
-  instagramHandle String @default("rovystore2")
-
-  announcementAr String @default("✨ شحن مجاني للطلبات فوق 1500 ج.م + عينات مجانية فاخرة مع كل طلب ✨")
-
-  announcementEn String @default("✨ Free shipping on orders over 1500 EGP + complimentary luxury samples with every order ✨")
-
-  updatedAt DateTime @updatedAt
+  id                    String   @id @default("rovy_settings")
+  isEmergencyLockdown   Boolean  @default(false)
+  storeNameAr           String   @default("روفي ستور — للعطور الفاخرة")
+  storeNameEn           String   @default("Rovy Store — Luxury Fragrances")
+  taglineAr             String   @default("أفخم العطور العالمية والبدائل المستوحاة بثبات وأصالة لا تُقاوم")
+  taglineEn             String   @default("Ultra-luxury designer & inspired niche fragrances")
+  whatsappPhone         String   @default("01503012856")
+  hotline               String   @default("01503012856")
+  secondaryPhone        String?  @default("01556718249")
+  googleMapsUrl         String?  @default("https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7")
+  deliveryFee           Float    @default(50.0)
+  freeShippingThreshold Float    @default(1500.0)
+  addressAr             String   @default("6 أكتوبر — الحي الرابع (شارع مجلس الدولة) — الجيزة")
+  addressEn             String   @default("6th of October — 4th District (Council of State St) — Giza")
+  workingHoursAr        String   @default("يومياً من 10 صباحاً وحتى 12 منتصف الليل")
+  workingHoursEn        String   @default("Daily from 10:00 AM to 12:00 Midnight")
+  instagramHandle       String   @default("rovystore2")
+  announcementAr        String   @default("✨ شحن مجاني للطلبات فوق 1500 ج.م + عينات مجانية فاخرة مع كل طلب ✨")
+  announcementEn        String   @default("✨ Free shipping on orders over 1500 EGP + complimentary luxury samples with every order ✨")
+  updatedAt             DateTime @updatedAt
 }
 
 model Category {

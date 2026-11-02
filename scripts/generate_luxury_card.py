@@ -13,9 +13,8 @@ def create_card():
     gold_bright = (245, 222, 179) # #f5deb3
     gold_primary = (212, 175, 55) # #d4af37
     gold_dark = (140, 105, 30)
-    gold_frame = (180, 140, 45, 180)
-    zinc_text = (190, 185, 195)
-    zinc_dim = (140, 135, 145)
+    zinc_text = (205, 200, 215)
+    zinc_dim = (150, 145, 155)
     
     # Outer Decorative Frames
     m1 = 28
@@ -34,7 +33,7 @@ def create_card():
         font_tag = ImageFont.truetype("arial.ttf", 15)
         font_qr_title = ImageFont.truetype("arialbd.ttf", 18)
         font_qr_sub = ImageFont.truetype("arial.ttf", 13)
-        font_contacts = ImageFont.truetype("arialbd.ttf", 16)
+        font_contacts = ImageFont.truetype("arialbd.ttf", 15)
         font_badge = ImageFont.truetype("arialbd.ttf", 12)
     except:
         font_logo = font_sub = font_tag = font_qr_title = font_qr_sub = font_contacts = font_badge = ImageFont.load_default()
@@ -65,16 +64,15 @@ def create_card():
     web_qr_path = os.path.join(base_dir, 'public', 'rovy-store-web-qr.png')
     apk_qr_path = os.path.join(base_dir, 'public', 'rovy-store-apk-qr.png')
     
-    qr_w, qr_h = 200, 200
-    
     # Box 1: Website QR (Left Center)
-    box1_x1, box1_y1 = 110, 260
-    box1_w, box1_h = 460, 260
+    box1_x1 = 70
+    box1_y1 = 250
+    box1_w = 500
+    box1_h = 280
     draw.rounded_rectangle([box1_x1, box1_y1, box1_x1 + box1_w, box1_y1 + box1_h], radius=20, fill=(16, 12, 22), outline=gold_dark, width=1)
     
     if os.path.exists(web_qr_path):
         qr1_img = Image.open(web_qr_path).convert('RGB').resize((190, 190), Image.Resampling.LANCZOS)
-        # White border around QR
         draw.rounded_rectangle([box1_x1 + 25, box1_y1 + 35, box1_x1 + 25 + 190, box1_y1 + 35 + 190], radius=10, fill=(255, 255, 255))
         im.paste(qr1_img, (box1_x1 + 25, box1_y1 + 35))
     
@@ -102,16 +100,17 @@ def create_card():
     draw.text((t2_x, box1_y1 + 195), "rovy-store.apk (v1.0.0)", fill=(80, 220, 140), font=font_qr_sub)
 
     # Bottom Contact Bar
-    draw.line([70, 560, width - 70, 560], fill=gold_dark, width=1)
+    draw.line([70, 555, width - 70, 555], fill=gold_dark, width=1)
     
     # 3 Contacts items
-    cy = 590
-    draw.text((120, cy), "Hotline & WhatsApp: 01000000000", fill=gold_bright, font=font_contacts)
-    draw.text((560, cy), "Instagram: @rovystore2", fill=gold_bright, font=font_contacts)
-    draw.text((880, cy), "Cairo & Zayed • All Egypt", fill=zinc_text, font=font_contacts)
+    cy = 575
+    draw.text((80, cy), "Phone & WhatsApp: 01503012856 / 01556718249", fill=gold_bright, font=font_contacts)
+    draw.text((580, cy), "Instagram: @rovystore2", fill=gold_bright, font=font_contacts)
+    draw.text((840, cy), "6th of October — 4th District", fill=zinc_text, font=font_contacts)
 
-    # Secondary Tagline
-    draw.text((width // 2 - 190, 625), "ضمان الفحص والتجربة قبل الدفع • ثبات يدوم طويلاً", fill=gold_primary, font=font_qr_sub)
+    # Secondary Tagline & Google Maps Location
+    draw.text((width // 2 - 325, 615), "6 October City • 4th District (Council of State St) • Google Maps Verified Location", fill=gold_primary, font=font_qr_sub)
+    draw.text((width // 2 - 200, 638), "Boutique Fragrance Experience • Inspect & Test Prior to Payment", fill=zinc_dim, font=font_badge)
 
     # Save to public and to artifact dir
     out_public = os.path.join(base_dir, 'public', 'rovy-store-official-card.png')

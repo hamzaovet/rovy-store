@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 import InstagramIcon from "@/components/InstagramIcon";
 
@@ -29,6 +30,8 @@ export default function SettingsPage() {
   const [taglineEn, setTaglineEn] = useState("");
   const [whatsappPhone, setWhatsappPhone] = useState("");
   const [hotline, setHotline] = useState("");
+  const [secondaryPhone, setSecondaryPhone] = useState("");
+  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   const [addressAr, setAddressAr] = useState("");
   const [addressEn, setAddressEn] = useState("");
   const [workingHoursAr, setWorkingHoursAr] = useState("");
@@ -48,12 +51,14 @@ export default function SettingsPage() {
       setStoreNameEn(settings.storeNameEn || "Rovy Store — Luxury Fragrances");
       setTaglineAr(settings.taglineAr || "");
       setTaglineEn(settings.taglineEn || "");
-      setWhatsappPhone(settings.whatsappPhone || "");
-      setHotline(settings.hotline || "");
-      setAddressAr(settings.addressAr || "");
-      setAddressEn(settings.addressEn || "");
-      setWorkingHoursAr(settings.workingHoursAr || "");
-      setWorkingHoursEn(settings.workingHoursEn || "");
+      setWhatsappPhone(settings.whatsappPhone || "01503012856");
+      setHotline(settings.hotline || "01503012856");
+      setSecondaryPhone(settings.secondaryPhone || "01556718249");
+      setGoogleMapsUrl(settings.googleMapsUrl || "https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7");
+      setAddressAr(settings.addressAr || "6 أكتوبر — الحي الرابع (شارع مجلس الدولة) — الجيزة");
+      setAddressEn(settings.addressEn || "6th of October — 4th District (Council of State St) — Giza");
+      setWorkingHoursAr(settings.workingHoursAr || "يومياً من 10 صباحاً وحتى 12 منتصف الليل");
+      setWorkingHoursEn(settings.workingHoursEn || "Daily from 10:00 AM to 12:00 Midnight");
       setInstagramHandle(settings.instagramHandle || "rovystore2");
       setAnnouncementAr(settings.announcementAr || "");
       setAnnouncementEn(settings.announcementEn || "");
@@ -75,6 +80,8 @@ export default function SettingsPage() {
       taglineEn,
       whatsappPhone: whatsappPhone.trim(),
       hotline: hotline.trim(),
+      secondaryPhone: secondaryPhone.trim(),
+      googleMapsUrl: googleMapsUrl.trim(),
       addressAr,
       addressEn,
       workingHoursAr,
@@ -89,7 +96,7 @@ export default function SettingsPage() {
     setSaving(false);
     if (ok) {
       playSound("success");
-      setSuccessMsg("تم حفظ كافة إعدادات المتجر وبيانات الاتصال بنجاح وظهرت في واجهة المتجر فوراً! ✨");
+      setSuccessMsg("تم حفظ كافة إعدادات المتجر وبيانات الاتصال واللوكيشن بنجاح وظهرت في واجهة المتجر والكارت فوراً! ✨");
       setTimeout(() => setSuccessMsg(""), 5000);
     } else {
       alert("حدث خطأ أثناء حفظ الإعدادات، يرجى المحاولة مرة أخرى.");
@@ -107,10 +114,10 @@ export default function SettingsPage() {
             </span>
             <div>
               <h1 className="text-xl font-black font-serif text-gold-gradient">
-                إعدادات المتجر وبيانات الاتصال والعناوين
+                إعدادات المتجر وبيانات الاتصال واللوكيشن
               </h1>
               <p className="text-xs text-zinc-400 mt-0.5">
-                تعديل رقم الهاتف، الواتساب، العناوين، مواعيد العمل، والشريط الإعلاني للمتجر بالكامل
+                تعديل أرقام الهواتف، الواتساب، رابط Google Maps، العناوين، وساعات العمل للمتجر بالكامل
               </p>
             </div>
           </div>
@@ -138,46 +145,62 @@ export default function SettingsPage() {
           <div className="bg-[#0c0914] border border-amber-500/20 rounded-2xl p-5 shadow-xl space-y-4">
             <h3 className="font-serif font-bold text-sm text-zinc-100 flex items-center gap-2 border-b border-zinc-800 pb-3">
               <Phone size={17} className="text-amber-400" />
-              <span>أرقام الهواتف وخدمة العملاء والواتساب (تظهر في الفوتر والترويسة)</span>
+              <span>أرقام الهواتف وخدمة العملاء والواتساب الرسمية</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
                 <label className="block text-zinc-300 font-medium mb-1">
-                  رقم الهاتف الأساسي للاتصال والفوتر:
+                  رقم الهاتف الأساسي والواتساب (فون المحل والأوردرات):
                 </label>
                 <input
                   type="text"
                   required
                   value={hotline}
                   onChange={(e) => setHotline(e.target.value)}
-                  placeholder="مثال: 010xxxxxxxx"
+                  placeholder="01503012856"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-mono focus:outline-none focus:border-amber-500"
                 />
                 <span className="text-[10.5px] text-zinc-500 mt-1 block">
-                  يظهر في الترويسة العلوية وبند خدمة العملاء في الفوتر.
+                  يظهر في الترويسة العلوية وبند خدمة العملاء وفي الفواتير والكارت الرسمي.
                 </span>
               </div>
 
               <div>
                 <label className="block text-zinc-300 font-medium mb-1">
-                  رقم الواتساب لاستقبال وتأكيد الأوردرات:
+                  الرقم الثاني / الواتساب الإضافي:
+                </label>
+                <input
+                  type="text"
+                  value={secondaryPhone}
+                  onChange={(e) => setSecondaryPhone(e.target.value)}
+                  placeholder="01556718249"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-mono focus:outline-none focus:border-amber-500"
+                />
+                <span className="text-[10.5px] text-zinc-500 mt-1 block">
+                  رقم احتياطي للعملاء واستقبال أي استفسارات أو أوردرات إضافية.
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
+              <div>
+                <label className="block text-zinc-300 font-medium mb-1">
+                  رقم الواتساب المربوط بزر الشراء المباشر:
                 </label>
                 <input
                   type="text"
                   required
                   value={whatsappPhone}
                   onChange={(e) => setWhatsappPhone(e.target.value)}
-                  placeholder="010xxxxxxxx"
+                  placeholder="01503012856"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-mono focus:outline-none focus:border-amber-500"
                 />
                 <span className="text-[10.5px] text-zinc-500 mt-1 block">
-                  ترسل له سلة المشتريات والاستفسارات مباشرة بنقرة واحدة.
+                  ترسل له رسائل زر &quot;الطلب عبر واتساب&quot; وتفاصيل العطور تلقائياً.
                 </span>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
               <div>
                 <label className="block text-zinc-300 font-medium mb-1 flex items-center gap-1.5">
                   <InstagramIcon size={14} className="text-amber-400" />
@@ -196,40 +219,26 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-
-              <div>
-                <label className="block text-zinc-300 font-medium mb-1 flex items-center gap-1.5">
-                  <Clock size={14} className="text-amber-400" />
-                  <span>مواعيد العمل وساعات خدمة العملاء:</span>
-                </label>
-                <input
-                  type="text"
-                  value={workingHoursAr}
-                  onChange={(e) => setWorkingHoursAr(e.target.value)}
-                  placeholder="يومياً من 10 صباحاً وحتى 12 منتصف الليل"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500"
-                />
-              </div>
             </div>
           </div>
 
-          {/* Section 2: Address & Shipping Details */}
+          {/* Section 2: Address & Google Maps Details */}
           <div className="bg-[#0c0914] border border-amber-500/20 rounded-2xl p-5 shadow-xl space-y-4">
             <h3 className="font-serif font-bold text-sm text-zinc-100 flex items-center gap-2 border-b border-zinc-800 pb-3">
               <MapPin size={17} className="text-amber-400" />
-              <span>العنوان، فروع التوزيع، وسياسة الشحن</span>
+              <span>عنوان البوتيك ورابط الموقع على خرائط جوجل (Google Maps)</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
                 <label className="block text-zinc-300 font-medium mb-1">
-                  العنوان ومناطق الشحن (عربي):
+                  العنوان بالتفصيل (عربي):
                 </label>
                 <input
                   type="text"
                   value={addressAr}
                   onChange={(e) => setAddressAr(e.target.value)}
-                  placeholder="القاهرة والشيخ زايد — شحن سريع لجميع المحافظات"
+                  placeholder="6 أكتوبر — الحي الرابع (شارع مجلس الدولة) — الجيزة"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500"
                 />
               </div>
@@ -242,22 +251,51 @@ export default function SettingsPage() {
                   type="text"
                   value={addressEn}
                   onChange={(e) => setAddressEn(e.target.value)}
-                  placeholder="Cairo & Sheikh Zayed — Express Delivery All Egypt"
+                  placeholder="6th of October — 4th District (Council of State St) — Giza"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-mono focus:outline-none focus:border-amber-500"
                 />
               </div>
             </div>
 
+            <div className="text-xs pt-2">
+              <label className="block text-zinc-300 font-medium mb-1 flex items-center justify-between">
+                <span>رابط لوكيشن المتجر على خرائط جوجل (Google Maps URL):</span>
+                {googleMapsUrl && (
+                  <a
+                    href={googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-amber-400 hover:underline flex items-center gap-1 font-sans"
+                  >
+                    <span>فتح اللوكيشن</span>
+                    <ExternalLink size={12} />
+                  </a>
+                )}
+              </label>
+              <input
+                type="url"
+                value={googleMapsUrl}
+                onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                placeholder="https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-mono focus:outline-none focus:border-amber-500"
+              />
+              <span className="text-[10.5px] text-zinc-500 mt-1 block">
+                يتيح للعملاء فتح الخريطة مباشرة بنقرة واحدة والوصول لمحل روفي ستور.
+              </span>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
               <div>
-                <label className="block text-zinc-300 font-medium mb-1">
-                  تكلفة الشحن الافتراضية (ج.م):
+                <label className="block text-zinc-300 font-medium mb-1 flex items-center gap-1.5">
+                  <Clock size={14} className="text-amber-400" />
+                  <span>مواعيد وساعات العمل واستقبال الزوار:</span>
                 </label>
                 <input
-                  type="number"
-                  value={deliveryFee}
-                  onChange={(e) => setDeliveryFee(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-mono focus:outline-none focus:border-amber-500"
+                  type="text"
+                  value={workingHoursAr}
+                  onChange={(e) => setWorkingHoursAr(e.target.value)}
+                  placeholder="يومياً من 10 صباحاً وحتى 12 منتصف الليل"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -271,9 +309,6 @@ export default function SettingsPage() {
                   onChange={(e) => setFreeShippingThreshold(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-mono focus:outline-none focus:border-amber-500"
                 />
-                <span className="text-[10.5px] text-zinc-500 mt-1 block">
-                  أي طلب يتجاوز هذا المبلغ يحصل على شحن مجاني تلقائياً.
-                </span>
               </div>
             </div>
           </div>

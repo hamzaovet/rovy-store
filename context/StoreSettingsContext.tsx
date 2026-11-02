@@ -9,6 +9,8 @@ export interface StoreSettingsData {
   taglineEn: string;
   whatsappPhone: string;
   hotline: string;
+  secondaryPhone?: string;
+  googleMapsUrl?: string;
   addressAr: string;
   addressEn: string;
   workingHoursAr: string;
@@ -25,10 +27,12 @@ const defaultSettings: StoreSettingsData = {
   storeNameEn: "Rovy Store — Luxury Fragrances",
   taglineAr: "أفخم العطور العالمية والبدائل المستوحاة بثبات وأصالة لا تُقاوم",
   taglineEn: "Ultra-luxury designer & inspired niche fragrances",
-  whatsappPhone: "01000000000",
-  hotline: "01000000000",
-  addressAr: "القاهرة والشيخ زايد — شحن سريع لجميع المحافظات",
-  addressEn: "Cairo & Sheikh Zayed — Express Delivery All Egypt",
+  whatsappPhone: "01503012856",
+  hotline: "01503012856",
+  secondaryPhone: "01556718249",
+  googleMapsUrl: "https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7",
+  addressAr: "6 أكتوبر — الحي الرابع (شارع مجلس الدولة) — الجيزة",
+  addressEn: "6th of October — 4th District (Council of State St) — Giza",
   workingHoursAr: "يومياً من 10 صباحاً وحتى 12 منتصف الليل",
   workingHoursEn: "Daily from 10:00 AM to 12:00 Midnight",
   instagramHandle: "rovystore2",

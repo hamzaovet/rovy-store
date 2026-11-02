@@ -3356,6 +3356,8 @@ export namespace Prisma {
     taglineEn: string | null
     whatsappPhone: string | null
     hotline: string | null
+    secondaryPhone: string | null
+    googleMapsUrl: string | null
     deliveryFee: number | null
     freeShippingThreshold: number | null
     addressAr: string | null
@@ -3377,6 +3379,8 @@ export namespace Prisma {
     taglineEn: string | null
     whatsappPhone: string | null
     hotline: string | null
+    secondaryPhone: string | null
+    googleMapsUrl: string | null
     deliveryFee: number | null
     freeShippingThreshold: number | null
     addressAr: string | null
@@ -3398,6 +3402,8 @@ export namespace Prisma {
     taglineEn: number
     whatsappPhone: number
     hotline: number
+    secondaryPhone: number
+    googleMapsUrl: number
     deliveryFee: number
     freeShippingThreshold: number
     addressAr: number
@@ -3431,6 +3437,8 @@ export namespace Prisma {
     taglineEn?: true
     whatsappPhone?: true
     hotline?: true
+    secondaryPhone?: true
+    googleMapsUrl?: true
     deliveryFee?: true
     freeShippingThreshold?: true
     addressAr?: true
@@ -3452,6 +3460,8 @@ export namespace Prisma {
     taglineEn?: true
     whatsappPhone?: true
     hotline?: true
+    secondaryPhone?: true
+    googleMapsUrl?: true
     deliveryFee?: true
     freeShippingThreshold?: true
     addressAr?: true
@@ -3473,6 +3483,8 @@ export namespace Prisma {
     taglineEn?: true
     whatsappPhone?: true
     hotline?: true
+    secondaryPhone?: true
+    googleMapsUrl?: true
     deliveryFee?: true
     freeShippingThreshold?: true
     addressAr?: true
@@ -3581,6 +3593,8 @@ export namespace Prisma {
     taglineEn: string
     whatsappPhone: string
     hotline: string
+    secondaryPhone: string | null
+    googleMapsUrl: string | null
     deliveryFee: number
     freeShippingThreshold: number
     addressAr: string
@@ -3621,6 +3635,8 @@ export namespace Prisma {
     taglineEn?: boolean
     whatsappPhone?: boolean
     hotline?: boolean
+    secondaryPhone?: boolean
+    googleMapsUrl?: boolean
     deliveryFee?: boolean
     freeShippingThreshold?: boolean
     addressAr?: boolean
@@ -3642,6 +3658,8 @@ export namespace Prisma {
     taglineEn?: boolean
     whatsappPhone?: boolean
     hotline?: boolean
+    secondaryPhone?: boolean
+    googleMapsUrl?: boolean
     deliveryFee?: boolean
     freeShippingThreshold?: boolean
     addressAr?: boolean
@@ -3663,6 +3681,8 @@ export namespace Prisma {
     taglineEn?: boolean
     whatsappPhone?: boolean
     hotline?: boolean
+    secondaryPhone?: boolean
+    googleMapsUrl?: boolean
     deliveryFee?: boolean
     freeShippingThreshold?: boolean
     addressAr?: boolean
@@ -3684,6 +3704,8 @@ export namespace Prisma {
     taglineEn?: boolean
     whatsappPhone?: boolean
     hotline?: boolean
+    secondaryPhone?: boolean
+    googleMapsUrl?: boolean
     deliveryFee?: boolean
     freeShippingThreshold?: boolean
     addressAr?: boolean
@@ -3696,7 +3718,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type StoreSettingsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "isEmergencyLockdown" | "storeNameAr" | "storeNameEn" | "taglineAr" | "taglineEn" | "whatsappPhone" | "hotline" | "deliveryFee" | "freeShippingThreshold" | "addressAr" | "addressEn" | "workingHoursAr" | "workingHoursEn" | "instagramHandle" | "announcementAr" | "announcementEn" | "updatedAt", ExtArgs["result"]["storeSettings"]>
+  export type StoreSettingsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "isEmergencyLockdown" | "storeNameAr" | "storeNameEn" | "taglineAr" | "taglineEn" | "whatsappPhone" | "hotline" | "secondaryPhone" | "googleMapsUrl" | "deliveryFee" | "freeShippingThreshold" | "addressAr" | "addressEn" | "workingHoursAr" | "workingHoursEn" | "instagramHandle" | "announcementAr" | "announcementEn" | "updatedAt", ExtArgs["result"]["storeSettings"]>
 
   export type $StoreSettingsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "StoreSettings"
@@ -3710,6 +3732,8 @@ export namespace Prisma {
       taglineEn: string
       whatsappPhone: string
       hotline: string
+      secondaryPhone: string | null
+      googleMapsUrl: string | null
       deliveryFee: number
       freeShippingThreshold: number
       addressAr: string
@@ -4151,6 +4175,8 @@ export namespace Prisma {
     readonly taglineEn: FieldRef<"StoreSettings", 'String'>
     readonly whatsappPhone: FieldRef<"StoreSettings", 'String'>
     readonly hotline: FieldRef<"StoreSettings", 'String'>
+    readonly secondaryPhone: FieldRef<"StoreSettings", 'String'>
+    readonly googleMapsUrl: FieldRef<"StoreSettings", 'String'>
     readonly deliveryFee: FieldRef<"StoreSettings", 'Float'>
     readonly freeShippingThreshold: FieldRef<"StoreSettings", 'Float'>
     readonly addressAr: FieldRef<"StoreSettings", 'String'>
@@ -20079,6 +20105,8 @@ export namespace Prisma {
     taglineEn: 'taglineEn',
     whatsappPhone: 'whatsappPhone',
     hotline: 'hotline',
+    secondaryPhone: 'secondaryPhone',
+    googleMapsUrl: 'googleMapsUrl',
     deliveryFee: 'deliveryFee',
     freeShippingThreshold: 'freeShippingThreshold',
     addressAr: 'addressAr',
@@ -20545,6 +20573,8 @@ export namespace Prisma {
     taglineEn?: StringFilter<"StoreSettings"> | string
     whatsappPhone?: StringFilter<"StoreSettings"> | string
     hotline?: StringFilter<"StoreSettings"> | string
+    secondaryPhone?: StringNullableFilter<"StoreSettings"> | string | null
+    googleMapsUrl?: StringNullableFilter<"StoreSettings"> | string | null
     deliveryFee?: FloatFilter<"StoreSettings"> | number
     freeShippingThreshold?: FloatFilter<"StoreSettings"> | number
     addressAr?: StringFilter<"StoreSettings"> | string
@@ -20566,6 +20596,8 @@ export namespace Prisma {
     taglineEn?: SortOrder
     whatsappPhone?: SortOrder
     hotline?: SortOrder
+    secondaryPhone?: SortOrderInput | SortOrder
+    googleMapsUrl?: SortOrderInput | SortOrder
     deliveryFee?: SortOrder
     freeShippingThreshold?: SortOrder
     addressAr?: SortOrder
@@ -20590,6 +20622,8 @@ export namespace Prisma {
     taglineEn?: StringFilter<"StoreSettings"> | string
     whatsappPhone?: StringFilter<"StoreSettings"> | string
     hotline?: StringFilter<"StoreSettings"> | string
+    secondaryPhone?: StringNullableFilter<"StoreSettings"> | string | null
+    googleMapsUrl?: StringNullableFilter<"StoreSettings"> | string | null
     deliveryFee?: FloatFilter<"StoreSettings"> | number
     freeShippingThreshold?: FloatFilter<"StoreSettings"> | number
     addressAr?: StringFilter<"StoreSettings"> | string
@@ -20611,6 +20645,8 @@ export namespace Prisma {
     taglineEn?: SortOrder
     whatsappPhone?: SortOrder
     hotline?: SortOrder
+    secondaryPhone?: SortOrderInput | SortOrder
+    googleMapsUrl?: SortOrderInput | SortOrder
     deliveryFee?: SortOrder
     freeShippingThreshold?: SortOrder
     addressAr?: SortOrder
@@ -20640,6 +20676,8 @@ export namespace Prisma {
     taglineEn?: StringWithAggregatesFilter<"StoreSettings"> | string
     whatsappPhone?: StringWithAggregatesFilter<"StoreSettings"> | string
     hotline?: StringWithAggregatesFilter<"StoreSettings"> | string
+    secondaryPhone?: StringNullableWithAggregatesFilter<"StoreSettings"> | string | null
+    googleMapsUrl?: StringNullableWithAggregatesFilter<"StoreSettings"> | string | null
     deliveryFee?: FloatWithAggregatesFilter<"StoreSettings"> | number
     freeShippingThreshold?: FloatWithAggregatesFilter<"StoreSettings"> | number
     addressAr?: StringWithAggregatesFilter<"StoreSettings"> | string
@@ -22080,6 +22118,8 @@ export namespace Prisma {
     taglineEn?: string
     whatsappPhone?: string
     hotline?: string
+    secondaryPhone?: string | null
+    googleMapsUrl?: string | null
     deliveryFee?: number
     freeShippingThreshold?: number
     addressAr?: string
@@ -22101,6 +22141,8 @@ export namespace Prisma {
     taglineEn?: string
     whatsappPhone?: string
     hotline?: string
+    secondaryPhone?: string | null
+    googleMapsUrl?: string | null
     deliveryFee?: number
     freeShippingThreshold?: number
     addressAr?: string
@@ -22122,6 +22164,8 @@ export namespace Prisma {
     taglineEn?: StringFieldUpdateOperationsInput | string
     whatsappPhone?: StringFieldUpdateOperationsInput | string
     hotline?: StringFieldUpdateOperationsInput | string
+    secondaryPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    googleMapsUrl?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: FloatFieldUpdateOperationsInput | number
     freeShippingThreshold?: FloatFieldUpdateOperationsInput | number
     addressAr?: StringFieldUpdateOperationsInput | string
@@ -22143,6 +22187,8 @@ export namespace Prisma {
     taglineEn?: StringFieldUpdateOperationsInput | string
     whatsappPhone?: StringFieldUpdateOperationsInput | string
     hotline?: StringFieldUpdateOperationsInput | string
+    secondaryPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    googleMapsUrl?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: FloatFieldUpdateOperationsInput | number
     freeShippingThreshold?: FloatFieldUpdateOperationsInput | number
     addressAr?: StringFieldUpdateOperationsInput | string
@@ -22164,6 +22210,8 @@ export namespace Prisma {
     taglineEn?: string
     whatsappPhone?: string
     hotline?: string
+    secondaryPhone?: string | null
+    googleMapsUrl?: string | null
     deliveryFee?: number
     freeShippingThreshold?: number
     addressAr?: string
@@ -22185,6 +22233,8 @@ export namespace Prisma {
     taglineEn?: StringFieldUpdateOperationsInput | string
     whatsappPhone?: StringFieldUpdateOperationsInput | string
     hotline?: StringFieldUpdateOperationsInput | string
+    secondaryPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    googleMapsUrl?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: FloatFieldUpdateOperationsInput | number
     freeShippingThreshold?: FloatFieldUpdateOperationsInput | number
     addressAr?: StringFieldUpdateOperationsInput | string
@@ -22206,6 +22256,8 @@ export namespace Prisma {
     taglineEn?: StringFieldUpdateOperationsInput | string
     whatsappPhone?: StringFieldUpdateOperationsInput | string
     hotline?: StringFieldUpdateOperationsInput | string
+    secondaryPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    googleMapsUrl?: NullableStringFieldUpdateOperationsInput | string | null
     deliveryFee?: FloatFieldUpdateOperationsInput | number
     freeShippingThreshold?: FloatFieldUpdateOperationsInput | number
     addressAr?: StringFieldUpdateOperationsInput | string
@@ -23962,6 +24014,8 @@ export namespace Prisma {
     taglineEn?: SortOrder
     whatsappPhone?: SortOrder
     hotline?: SortOrder
+    secondaryPhone?: SortOrder
+    googleMapsUrl?: SortOrder
     deliveryFee?: SortOrder
     freeShippingThreshold?: SortOrder
     addressAr?: SortOrder
@@ -23988,6 +24042,8 @@ export namespace Prisma {
     taglineEn?: SortOrder
     whatsappPhone?: SortOrder
     hotline?: SortOrder
+    secondaryPhone?: SortOrder
+    googleMapsUrl?: SortOrder
     deliveryFee?: SortOrder
     freeShippingThreshold?: SortOrder
     addressAr?: SortOrder
@@ -24009,6 +24065,8 @@ export namespace Prisma {
     taglineEn?: SortOrder
     whatsappPhone?: SortOrder
     hotline?: SortOrder
+    secondaryPhone?: SortOrder
+    googleMapsUrl?: SortOrder
     deliveryFee?: SortOrder
     freeShippingThreshold?: SortOrder
     addressAr?: SortOrder
