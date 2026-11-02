@@ -1,0 +1,129 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/client"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  pin       String
+  name      String
+  role      String   @default("manager") // owner, manager, staff
+  phone     String?
+  avatar    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StoreSettings {
+  id                  String   @id @default("rovy_settings")
+  isEmergencyLockdown Boolean  @default(false)
+  storeNameAr         String   @default("روفي ستور — للعطور الفاخرة")
+  storeNameEn         String   @default("Rovy Store — Luxury Fragrances")
+  taglineAr           String   @default("أفخم العطور العالمية والبدائل المستوحاة بثبات وأصالة لا تُقاوم")
+  taglineEn           String   @default("Ultra-luxury designer & inspired niche fragrances")
+  whatsappPhone       String   @default("201010568615")
+  hotline             String   @default("01010568615")
+  deliveryFee         Float    @default(50.0)
+  addressAr           String   @default("القاهرة والشيخ زايد — شحن سريع لجميع المحافظات")
+  addressEn           String   @default("Cairo & Sheikh Zayed — Express Delivery All Egypt")
+  announcementAr      String   @default("✨ شحن مجاني للطلبات فوق 1500 ج.م + عينات مجانية فاخرة مع كل طلب ✨")
+  announcementEn      String   @default("✨ Free shipping on orders over 1500 EGP + complimentary luxury samples with every order ✨")
+  updatedAt           DateTime @updatedAt
+}
+
+model Category {
+  id            String    @id @default(cuid())
+  nameAr        String    @unique
+  nameEn        String
+  slug          String    @unique
+  descriptionAr String?
+  descriptionEn String?
+  image         String?
+  icon          String?
+  sortOrder     Int       @default(0)
+  products      Product[]
+  createdAt     DateTime  @default(now())
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  nameAr          String
+  nameEn          String
+  slug            String   @unique
+  brandAr         String
+  brandEn         String
+  type            String   @default("ORIGINAL") // ORIGINAL (أصلي 100%), TESTER (تيستر أصلي), HIGH_COPY (ماستر كوبي), INSPIRED (بديل مستوحى)
+  concentration   String   @default("Eau de Parfum") // Eau de Parfum, Extrait de Parfum, Eau de Toilette
+  volume          String   @default("100 ml") // 50 ml, 100 ml, 200 ml
+  price           Float
+  originalPrice   Float?
+  discountPercent Int      @default(0)
+  isFeatured      Boolean  @default(false)
+  isWinter        Boolean  @default(false) // Winter Collection flag (like Zidances winter-1)
+  isBestSeller    Boolean  @default(false)
+  inStock         Boolean  @default(true)
+  stockQuantity   Int      @default(50)
+  rating          Float    @default(4.9)
+  reviewsCount    Int      @default(38)
+  descriptionAr   String   @db.Text
+  descriptionEn   String   @db.Text
+  topNotesAr      String // النوتات الافتتاحية
+  topNotesEn      String
+  heartNotesAr    String // قلب العطر
+  heartNotesEn    String
+  baseNotesAr     String // قاعدة العطر
+  baseNotesEn     String
+  ingredientsAr   String?  @db.Text
+  ingredientsEn   String?  @db.Text
+  seasonAr        String   @default("كل الفصول") // شتوي / صيفي / خريفي / كل الفصول
+  seasonEn        String   @default("All Seasons")
+  genderAr        String   @default("للجنسين") // رجالي / نسائي / للجنسين
+  genderEn        String   @default("Unisex")
+  longevityAr     String   @default("ثبات يدوم أكثر من 24 ساعة")
+  longevityEn     String   @default("24+ Hours Long Lasting")
+  sillageAr       String   @default("فوحان قوي جداً يملأ المكان")
+  sillageEn       String   @default("Enormous Sillage & Projection")
+  image           String
+  gallery         String?  @db.Text // JSON string of gallery images
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  orderNumber     String   @unique
+  customerName    String
+  customerPhone   String
+  customerAddress String
+  customerCity    String
+  notes           String?
+  items           String   @db.Text // JSON string of cart items
+  subtotal        Float
+  deliveryFee     Float    @default(50.0)
+  totalAmount     Float
+  status          String   @default("PENDING") // PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED
+  paymentMethod   String   @default("COD") // COD (دفع عند الاستلام), INSTAPAY, VODAFONE_CASH
+  trackingNumber  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  productId    String?
+  customerName String
+  rating       Int      @default(5)
+  comment      String
+  city         String?
+  isVerified   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
