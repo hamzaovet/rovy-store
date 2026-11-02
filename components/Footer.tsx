@@ -51,8 +51,8 @@ export default function Footer() {
   const instagram = settings.instagramHandle || "rovystore2";
   const mapsUrl = settings.googleMapsUrl || "https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7";
   const addressText = isAr
-    ? settings.addressAr || "6 أكتوبر — الحي الرابع (شارع مجلس الدولة) — الجيزة"
-    : settings.addressEn || "Cairo & Sheikh Zayed — Express Delivery All Egypt";
+    ? settings.addressAr || "مصر الجديدة — طريق العروبة ومساكن شيراتون (بالقرب من مطار القاهرة) — القاهرة"
+    : settings.addressEn || "Heliopolis — El-Orouba Rd & Sheraton (Near Cairo Airport) — Cairo";
   const hoursText = isAr
     ? settings.workingHoursAr || "يومياً من 10 صباحاً وحتى 12 منتصف الليل"
     : settings.workingHoursEn || "Daily 10:00 AM - 12:00 Midnight";

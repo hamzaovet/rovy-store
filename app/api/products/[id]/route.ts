@@ -36,6 +36,7 @@ export async function PATCH(
     if (body.descriptionEn !== undefined) updateData.descriptionEn = body.descriptionEn;
     if (body.ingredientsAr !== undefined) updateData.ingredientsAr = body.ingredientsAr;
     if (body.ingredientsEn !== undefined) updateData.ingredientsEn = body.ingredientsEn;
+    if (body.categoryId !== undefined) updateData.categoryId = body.categoryId;
     if (body.image !== undefined) updateData.image = body.image;
 
     const product = await prisma.product.update({

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import ErpLayout from "@/components/ErpLayout";
+import ImageUploader from "@/components/ImageUploader";
 import { playSound } from "@/lib/sounds";
 import {
   Layers,
@@ -18,7 +19,27 @@ import {
   Sliders,
   DollarSign,
   Package,
+  FolderTree,
+  ExternalLink,
+  ChevronRight,
+  Flame,
+  Award,
 } from "lucide-react";
+
+interface Category {
+  id: string;
+  nameAr: string;
+  nameEn: string;
+  slug: string;
+  descriptionAr?: string | null;
+  descriptionEn?: string | null;
+  icon?: string | null;
+  image?: string | null;
+  sortOrder: number;
+  _count?: {
+    products: number;
+  };
+}
 
 interface Product {
   id: string;
@@ -26,6 +47,8 @@ interface Product {
   nameEn: string;
   brandAr: string;
   brandEn: string;
+  categoryId: string;
+  category?: Category | null;
   price: number;
   originalPrice?: number | null;
   discountPercent: number;
@@ -49,21 +72,27 @@ interface Product {
 }
 
 export default function MenuAdminPage() {
+  const [activeTab, setActiveTab] = useState<"products" | "categories">("products");
+
+  // Products State
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("الكل");
+  const [filterCategory, setFilterCategory] = useState("الكل");
 
-  // Modal State
+  // Product Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Form State
+  // Product Form State
   const [formNameAr, setFormNameAr] = useState("");
   const [formNameEn, setFormNameEn] = useState("");
   const [formBrandAr, setFormBrandAr] = useState("روفي بارفيومز");
   const [formBrandEn, setFormBrandEn] = useState("Rovy Parfums");
+  const [formCategoryId, setFormCategoryId] = useState("");
   const [formPrice, setFormPrice] = useState("1200");
   const [formOriginalPrice, setFormOriginalPrice] = useState("1500");
   const [formVolume, setFormVolume] = useState("100 ml");
@@ -82,16 +111,39 @@ export default function MenuAdminPage() {
   const [formDescEn, setFormDescEn] = useState("Ultra-luxurious fragrance from Rovy Store.");
   const [formImage, setFormImage] = useState("/perfumes/ombre-nomade.webp");
 
+  // Category Modal State
+  const [isCatModalOpen, setIsCatModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [catNameAr, setCatNameAr] = useState("");
+  const [catNameEn, setCatNameEn] = useState("");
+  const [catSlug, setCatSlug] = useState("");
+  const [catDescAr, setCatDescAr] = useState("");
+  const [catDescEn, setCatDescEn] = useState("");
+  const [catIcon, setCatIcon] = useState("✨");
+  const [catSortOrder, setCatSortOrder] = useState("0");
+  const [catImage, setCatImage] = useState("");
+  const [savingCat, setSavingCat] = useState(false);
+
   useEffect(() => {
-    fetchProducts();
+    fetchData();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/products");
-      const data = await res.json();
-      setProducts(data.products || []);
+      const [resProd, resCat] = await Promise.all([
+        fetch("/api/products"),
+        fetch("/api/categories"),
+      ]);
+      const dataProd = await resProd.json();
+      const dataCat = await resCat.json();
+
+      setProducts(dataProd.products || []);
+      setCategories(dataCat.categories || []);
+
+      if (dataCat.categories && dataCat.categories.length > 0 && !formCategoryId) {
+        setFormCategoryId(dataCat.categories[0].id);
+      }
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {
@@ -99,6 +151,7 @@ export default function MenuAdminPage() {
     }
   };
 
+  // Product Handlers
   const handleOpenAdd = () => {
     playSound("click");
     setEditingProduct(null);
@@ -106,6 +159,7 @@ export default function MenuAdminPage() {
     setFormNameEn("");
     setFormBrandAr("روفي بارفيومز");
     setFormBrandEn("Rovy Parfums");
+    setFormCategoryId(categories[0]?.id || "");
     setFormPrice("1250");
     setFormOriginalPrice("1600");
     setFormVolume("100 ml");
@@ -133,6 +187,7 @@ export default function MenuAdminPage() {
     setFormNameEn(p.nameEn);
     setFormBrandAr(p.brandAr);
     setFormBrandEn(p.brandEn);
+    setFormCategoryId(p.categoryId || categories[0]?.id || "");
     setFormPrice(p.price.toString());
     setFormOriginalPrice(p.originalPrice ? p.originalPrice.toString() : "");
     setFormVolume(p.volume);
@@ -153,58 +208,19 @@ export default function MenuAdminPage() {
     setIsModalOpen(true);
   };
 
-  // Toggle inStock with one click
-  const handleToggleStock = async (product: Product) => {
-    playSound("click");
-    const nextVal = !product.inStock;
-    try {
-      const res = await fetch(`/api/products/${product.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inStock: nextVal }),
-      });
-      if (res.ok) {
-        playSound("pop");
-        setProducts((prev) =>
-          prev.map((p) => (p.id === product.id ? { ...p, inStock: nextVal } : p))
-        );
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Delete Product
-  const handleDeleteProduct = async (id: string) => {
-    if (!confirm("هل أنت متأكد من رغبتك في حذف هذا العطر نهائياً من الكتالوج؟")) return;
-    playSound("trash");
-    try {
-      const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        playSound("success");
-        setProducts((prev) => prev.filter((p) => p.id !== id));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Save Modal
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formNameAr.trim() || !formPrice) {
-      alert("يرجى ملء اسم العطر والسعر");
-      return;
-    }
+    if (!formNameAr.trim() || !formPrice) return;
 
     setSaving(true);
     playSound("click");
 
     const payload = {
-      nameAr: formNameAr.trim(),
-      nameEn: formNameEn.trim() || formNameAr.trim(),
-      brandAr: formBrandAr.trim(),
-      brandEn: formBrandEn.trim(),
+      nameAr: formNameAr,
+      nameEn: formNameEn || formNameAr,
+      brandAr: formBrandAr,
+      brandEn: formBrandEn,
+      categoryId: formCategoryId,
       price: Number(formPrice),
       originalPrice: formOriginalPrice ? Number(formOriginalPrice) : null,
       volume: formVolume,
@@ -226,70 +242,202 @@ export default function MenuAdminPage() {
 
     try {
       if (editingProduct) {
-        // Edit
         const res = await fetch(`/api/products/${editingProduct.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        if (res.ok && data.success) {
+        if (data.success) {
           playSound("success");
-          setProducts((prev) =>
-            prev.map((p) => (p.id === editingProduct.id ? { ...p, ...payload } : p))
-          );
           setIsModalOpen(false);
+          fetchData();
         } else {
           alert(data.error || "فشل تعديل العطر");
         }
       } else {
-        // Create
         const res = await fetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        if (res.ok && data.success) {
+        if (data.success) {
           playSound("success");
-          setProducts((prev) => [data.product, ...prev]);
           setIsModalOpen(false);
+          fetchData();
         } else {
-          alert(data.error || "فشل حفظ العطر");
+          alert(data.error || "فشل إضافة العطر");
         }
       }
     } catch (err) {
-      console.error(err);
-      alert("حدث خطأ أثناء الحفظ");
+      console.error("Save error:", err);
+      alert("حدث خطأ أثناء حفظ بيانات العطر");
     } finally {
       setSaving(false);
     }
   };
 
+  const handleToggleStock = async (product: Product) => {
+    playSound("click");
+    const nextStock = !product.inStock;
+
+    // Optimistic update
+    setProducts((prev) =>
+      prev.map((p) => (p.id === product.id ? { ...p, inStock: nextStock } : p))
+    );
+
+    try {
+      await fetch(`/api/products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inStock: nextStock }),
+      });
+    } catch (err) {
+      console.error("Toggle stock error:", err);
+      fetchData();
+    }
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذا العطر من الكتالوج؟")) return;
+    playSound("click");
+
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+
+    try {
+      await fetch(`/api/products/${id}`, { method: "DELETE" });
+      playSound("trash");
+    } catch (err) {
+      console.error("Delete error:", err);
+      fetchData();
+    }
+  };
+
+  // Category Handlers
+  const handleOpenAddCategory = () => {
+    playSound("click");
+    setEditingCategory(null);
+    setCatNameAr("");
+    setCatNameEn("");
+    setCatSlug("");
+    setCatDescAr("");
+    setCatDescEn("");
+    setCatIcon("✨");
+    setCatSortOrder((categories.length + 1).toString());
+    setCatImage("");
+    setIsCatModalOpen(true);
+  };
+
+  const handleOpenEditCategory = (c: Category) => {
+    playSound("click");
+    setEditingCategory(c);
+    setCatNameAr(c.nameAr);
+    setCatNameEn(c.nameEn);
+    setCatSlug(c.slug);
+    setCatDescAr(c.descriptionAr || "");
+    setCatDescEn(c.descriptionEn || "");
+    setCatIcon(c.icon || "✨");
+    setCatSortOrder(c.sortOrder.toString());
+    setCatImage(c.image || "");
+    setIsCatModalOpen(true);
+  };
+
+  const handleSaveCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!catNameAr.trim()) return;
+
+    setSavingCat(true);
+    playSound("click");
+
+    const payload = {
+      nameAr: catNameAr,
+      nameEn: catNameEn || catNameAr,
+      slug: catSlug || undefined,
+      descriptionAr: catDescAr,
+      descriptionEn: catDescEn,
+      icon: catIcon,
+      image: catImage,
+      sortOrder: Number(catSortOrder) || 0,
+    };
+
+    try {
+      if (editingCategory) {
+        const res = await fetch(`/api/categories/${editingCategory.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.success) {
+          playSound("success");
+          setIsCatModalOpen(false);
+          fetchData();
+        } else {
+          alert(data.error || "فشل تعديل بيانات القسم");
+        }
+      } else {
+        const res = await fetch("/api/categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.success) {
+          playSound("success");
+          setIsCatModalOpen(false);
+          fetchData();
+        } else {
+          alert(data.error || "فشل إضافة القسم الجديد");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert("حدث خطأ أثناء حفظ القسم");
+    } finally {
+      setSavingCat(false);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذا القسم؟")) return;
+    playSound("click");
+
+    try {
+      const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        playSound("trash");
+        fetchData();
+      } else {
+        alert(data.error || "فشل حذف القسم");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("حدث خطأ أثناء حذف القسم");
+    }
+  };
+
   // Filtered Products
   const filteredProducts = products.filter((p) => {
-    if (filterType === "شتاء ❄️" && !p.isWinter) return false;
-    if (filterType === "أصلي" && p.type !== "ORIGINAL") return false;
-    if (filterType === "تستر" && p.type !== "TESTER") return false;
-    if (filterType === "بدائل" && p.type !== "INSPIRED") return false;
-    if (filterType === "متوفر فقط" && !p.inStock) return false;
+    const matchesSearch =
+      p.nameAr.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.brandAr.toLowerCase().includes(searchQuery.toLowerCase());
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchName =
-        p.nameAr.toLowerCase().includes(q) || p.nameEn.toLowerCase().includes(q);
-      const matchBrand =
-        p.brandAr.toLowerCase().includes(q) || p.brandEn.toLowerCase().includes(q);
-      return matchName || matchBrand;
-    }
+    const matchesType =
+      filterType === "الكل" ? true : p.type === filterType;
 
-    return true;
+    const matchesCategory =
+      filterCategory === "الكل" ? true : p.categoryId === filterCategory;
+
+    return matchesSearch && matchesType && matchesCategory;
   });
 
   return (
     <ErpLayout activeItem="menu">
       <div className="space-y-6">
-        {/* Header Bar */}
+        {/* Top Header & Tab Switcher */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/80 border border-amber-500/20 p-5 rounded-2xl shadow-xl">
           <div className="flex items-center gap-3">
             <span className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
@@ -297,199 +445,341 @@ export default function MenuAdminPage() {
             </span>
             <div>
               <h1 className="text-xl font-black font-serif text-gold-gradient">
-                كتالوج العطور الفاخرة وقائمة الأسعار
+                كتالوج العطور وإدارة الأقسام
               </h1>
               <p className="text-xs text-zinc-400 mt-0.5">
-                التحكم الكامل في الأصناف المعروضة، الأسعار، الهرم العطري، والصور وحالة المخزون
+                التحكم الكامل في الأصناف، رفع الصور مباشرة عبر ImgBB، وإدارة أقسام وتصنيفات المتجر
               </p>
             </div>
           </div>
 
-          <button
-            onClick={handleOpenAdd}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-black font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition"
-          >
-            <Plus size={16} />
-            <span>إضافة عطر جديد للكتالوج</span>
-          </button>
-        </div>
-
-        {/* Filters & Search */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="relative w-full sm:w-80">
-            <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="بحث بالاسم أو الماركة..."
-              className="w-full pr-10 pl-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-amber-500"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {["الكل", "شتاء ❄️", "أصلي", "تستر", "بدائل", "متوفر فقط"].map((f) => (
+          <div className="flex items-center gap-3">
+            {/* View Switcher Tabs */}
+            <div className="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-xs">
               <button
-                key={f}
                 onClick={() => {
                   playSound("click");
-                  setFilterType(f);
+                  setActiveTab("products");
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                  filterType === f
-                    ? "bg-amber-500 text-black shadow-md"
-                    : "bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800"
+                className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
+                  activeTab === "products"
+                    ? "bg-amber-500 text-black shadow-md shadow-amber-500/20"
+                    : "text-zinc-400 hover:text-white"
                 }`}
               >
-                {f}
+                <Package size={14} />
+                <span>قائمة العطور ({products.length})</span>
               </button>
-            ))}
+              <button
+                onClick={() => {
+                  playSound("click");
+                  setActiveTab("categories");
+                }}
+                className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
+                  activeTab === "categories"
+                    ? "bg-amber-500 text-black shadow-md shadow-amber-500/20"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                <FolderTree size={14} />
+                <span>أقسام المتجر ({categories.length})</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => {
+                playSound("click");
+                fetchData();
+              }}
+              className="p-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition"
+              title="تحديث البيانات"
+            >
+              <RefreshCw size={16} className={loading ? "animate-spin text-amber-400" : ""} />
+            </button>
+
+            {activeTab === "products" ? (
+              <button
+                onClick={handleOpenAdd}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-black font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition"
+              >
+                <Plus size={16} />
+                <span>إضافة عطر جديد</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleOpenAddCategory}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-black font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 transition"
+              >
+                <Plus size={16} />
+                <span>إضافة قسم جديد</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Perfumes Table / Cards */}
-        {loading ? (
-          <div className="py-20 text-center text-amber-400">
-            <RefreshCw size={28} className="animate-spin mx-auto mb-2" />
-            <span className="text-xs">جاري تحميل قائمة العطور...</span>
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="py-20 text-center text-zinc-500 text-xs bg-zinc-900/30 rounded-2xl border border-zinc-800">
-            لا توجد عطور مطابقة للبحث
-          </div>
-        ) : (
-          <div className="bg-[#0c0914] border border-amber-500/20 rounded-2xl overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-right text-xs">
-                <thead className="bg-zinc-900/90 text-zinc-400 border-b border-zinc-800 text-[11px] font-bold">
-                  <tr>
-                    <th className="py-3 px-4">العطر</th>
-                    <th className="py-3 px-4">الماركة والنوع</th>
-                    <th className="py-3 px-4">الحجم والتركيز</th>
-                    <th className="py-3 px-4">السعر</th>
-                    <th className="py-3 px-4">المخزون</th>
-                    <th className="py-3 px-4">الحالة في المتجر</th>
-                    <th className="py-3 px-4 text-center">إجراءات</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800/60">
-                  {filteredProducts.map((product) => (
-                    <tr
-                      key={product.id}
-                      className="hover:bg-zinc-900/40 transition-colors group"
-                    >
-                      {/* Image & Name */}
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={product.image}
-                            alt={product.nameAr}
-                            className="w-12 h-12 rounded-xl object-cover border border-zinc-800 shrink-0 bg-zinc-900"
-                          />
-                          <div>
-                            <div className="font-bold text-zinc-200 text-xs">
-                              {product.nameAr}
-                            </div>
-                            <div className="text-[10px] text-zinc-500 font-serif">
-                              {product.nameEn}
-                            </div>
-                            {product.isWinter && (
-                              <span className="inline-block mt-1 text-[9px] px-1.5 py-0.2 rounded bg-cyan-900/60 text-cyan-300 font-bold">
-                                ❄️ تشكيلة الشتاء
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
+        {/* TAB 1: PRODUCTS LIST VIEW */}
+        {activeTab === "products" && (
+          <div className="space-y-4">
+            {/* Filter Bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="relative">
+                <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder="ابحث باسم العطر، البراند، أو المكونات..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pr-10 pl-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-amber-500"
+                />
+              </div>
 
-                      {/* Brand & Type */}
-                      <td className="py-3 px-4">
-                        <div className="font-bold text-amber-400/90">{product.brandAr}</div>
-                        <span
-                          className={`inline-block mt-1 text-[9.5px] px-2 py-0.5 rounded-md font-bold ${
-                            product.type === "ORIGINAL"
-                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                              : product.type === "TESTER"
-                              ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                              : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                          }`}
-                        >
-                          {product.type === "ORIGINAL"
-                            ? "أصلي 100%"
-                            : product.type === "TESTER"
-                            ? "تستر أصلي"
-                            : product.type === "HIGH_COPY"
-                            ? "ماستر كوبي"
-                            : "بديل مستوحى"}
-                        </span>
-                      </td>
+              {/* Category Filter */}
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-300 focus:outline-none focus:border-amber-500"
+              >
+                <option value="الكل">كل الأقسام</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.icon} {c.nameAr}
+                  </option>
+                ))}
+              </select>
 
-                      {/* Volume & Concentration */}
-                      <td className="py-3 px-4 text-zinc-300">
-                        <div>{product.volume}</div>
-                        <div className="text-[10px] text-zinc-500">{product.concentration}</div>
-                      </td>
+              {/* Type Filter */}
+              <div className="flex gap-1.5 overflow-x-auto pb-1">
+                {["الكل", "ORIGINAL", "TESTER", "HIGH_COPY", "INSPIRED"].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => {
+                      playSound("click");
+                      setFilterType(t);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
+                      filterType === t
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                        : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
+                    }`}
+                  >
+                    {t === "الكل"
+                      ? "كافة الأنواع"
+                      : t === "ORIGINAL"
+                      ? "أصلي"
+                      : t === "TESTER"
+                      ? "تيستر"
+                      : t === "HIGH_COPY"
+                      ? "ماستر كوبي"
+                      : "بدائل نيش"}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                      {/* Price */}
-                      <td className="py-3 px-4">
-                        <div className="font-serif font-black text-sm text-gold-gradient">
-                          {product.price} ج.م
-                        </div>
-                        {product.originalPrice && (
-                          <div className="text-[10px] text-zinc-500 line-through">
-                            {product.originalPrice} ج.م
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Stock Quantity */}
-                      <td className="py-3 px-4 font-mono font-bold text-zinc-300">
-                        {product.stockQuantity} زجاجة
-                      </td>
-
-                      {/* In-Stock Toggle */}
-                      <td className="py-3 px-4">
-                        <button
-                          onClick={() => handleToggleStock(product)}
-                          className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold border transition ${
-                            product.inStock
-                              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30"
-                              : "bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30"
-                          }`}
-                        >
-                          {product.inStock ? "متوفر للطلب" : "نفذ من المخزن"}
-                        </button>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => handleOpenEdit(product)}
-                            className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 transition"
-                            title="تعديل العطر"
-                          >
-                            <Edit3 size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProduct(product.id)}
-                            className="p-1.5 rounded-lg bg-zinc-800 hover:bg-red-900/50 text-red-400 transition"
-                            title="حذف العطر"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
+            {/* Products Table */}
+            <div className="bg-[#0c0914] border border-amber-500/20 rounded-2xl overflow-hidden shadow-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-right text-xs">
+                  <thead className="bg-zinc-950/80 text-zinc-400 uppercase tracking-wider border-b border-zinc-800">
+                    <tr>
+                      <th className="py-3 px-4 font-serif">العطر</th>
+                      <th className="py-3 px-4 font-serif">القسم</th>
+                      <th className="py-3 px-4 font-serif">البراند والنوع</th>
+                      <th className="py-3 px-4 font-serif">الحجم / التركيز</th>
+                      <th className="py-3 px-4 font-serif">السعر</th>
+                      <th className="py-3 px-4 font-serif">المخزون</th>
+                      <th className="py-3 px-4 font-serif">الحالة</th>
+                      <th className="py-3 px-4 font-serif text-center">إجراءات</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60">
+                    {filteredProducts.map((product) => {
+                      const catName = categories.find((c) => c.id === product.categoryId)?.nameAr || "قسم عام";
+                      return (
+                        <tr key={product.id} className="hover:bg-zinc-900/40 transition">
+                          {/* Fragrance Name & Img */}
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-xl bg-zinc-950 border border-amber-500/20 overflow-hidden flex-shrink-0 relative">
+                                <img
+                                  src={product.image}
+                                  alt={product.nameAr}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div>
+                                <div className="font-bold text-zinc-100 flex items-center gap-1.5">
+                                  <span>{product.nameAr}</span>
+                                  {product.isWinter && (
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                      ❄️ شتوي
+                                    </span>
+                                  )}
+                                  {product.isFeatured && (
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                      ⭐ مميز
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[11px] text-zinc-500 font-sans">{product.nameEn}</span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Category */}
+                          <td className="py-3 px-4">
+                            <span className="px-2 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-300">
+                              {catName}
+                            </span>
+                          </td>
+
+                          {/* Brand & Type */}
+                          <td className="py-3 px-4">
+                            <div className="font-bold text-amber-400/90">{product.brandAr}</div>
+                            <span
+                              className={`inline-block mt-1 text-[9.5px] px-2 py-0.5 rounded-md font-bold ${
+                                product.type === "ORIGINAL"
+                                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                  : product.type === "TESTER"
+                                  ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                                  : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                              }`}
+                            >
+                              {product.type === "ORIGINAL"
+                                ? "أصلي 100%"
+                                : product.type === "TESTER"
+                                ? "تستر أصلي"
+                                : product.type === "HIGH_COPY"
+                                ? "ماستر كوبي"
+                                : "بديل مستوحى"}
+                            </span>
+                          </td>
+
+                          {/* Volume & Concentration */}
+                          <td className="py-3 px-4 text-zinc-300">
+                            <div>{product.volume}</div>
+                            <div className="text-[10px] text-zinc-500">{product.concentration}</div>
+                          </td>
+
+                          {/* Price */}
+                          <td className="py-3 px-4">
+                            <div className="font-serif font-black text-sm text-gold-gradient">
+                              {product.price} ج.م
+                            </div>
+                            {product.originalPrice && (
+                              <div className="text-[10px] text-zinc-500 line-through">
+                                {product.originalPrice} ج.م
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Stock Quantity */}
+                          <td className="py-3 px-4 font-mono font-bold text-zinc-300">
+                            {product.stockQuantity} زجاجة
+                          </td>
+
+                          {/* In-Stock Toggle */}
+                          <td className="py-3 px-4">
+                            <button
+                              onClick={() => handleToggleStock(product)}
+                              className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold border transition ${
+                                product.inStock
+                                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30"
+                                  : "bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30"
+                              }`}
+                            >
+                              {product.inStock ? "متوفر للطلب" : "نفذ من المخزن"}
+                            </button>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => handleOpenEdit(product)}
+                                className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 transition"
+                                title="تعديل العطر"
+                              >
+                                <Edit3 size={14} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProduct(product.id)}
+                                className="p-1.5 rounded-lg bg-zinc-800 hover:bg-red-900/50 text-red-400 transition"
+                                title="حذف العطر"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: CATEGORIES MANAGEMENT VIEW */}
+        {activeTab === "categories" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  className="bg-[#0c0914] border border-amber-500/20 rounded-2xl p-5 shadow-xl relative flex flex-col justify-between hover:border-amber-500/40 transition"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl">
+                        {cat.icon || "✨"}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[11px] font-mono font-bold text-amber-300">
+                          {cat._count?.products || 0} عطور
+                        </span>
+                      </div>
+                    </div>
+
+                    <h3 className="font-serif font-black text-base text-zinc-100">
+                      {cat.nameAr}
+                    </h3>
+                    <p className="text-xs text-amber-500/80 font-sans mt-0.5">{cat.nameEn}</p>
+                    <p className="text-xs text-zinc-400 line-clamp-2 mt-2 leading-relaxed">
+                      {cat.descriptionAr || "قسم مميز ضمن تشكيلات روفي ستور للعطور الفاخرة."}
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-zinc-800 mt-4 flex items-center justify-between text-xs">
+                    <span className="text-[11px] text-zinc-500 font-mono">
+                      slug: {cat.slug} (ترتيب: {cat.sortOrder})
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenEditCategory(cat)}
+                        className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 transition"
+                        title="تعديل القسم"
+                      >
+                        <Edit3 size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(cat.id)}
+                        className="p-1.5 rounded-lg bg-zinc-800 hover:bg-red-950 text-red-400 transition"
+                        title="حذف القسم"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* Add / Edit Perfume Modal */}
+      {/* Add / Edit Perfume Modal with ImgBB Uploader */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
           <div className="w-full max-w-2xl bg-[#120e1c] border border-amber-500/30 rounded-2xl p-6 shadow-2xl relative my-8">
@@ -500,49 +790,71 @@ export default function MenuAdminPage() {
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white"
+                className="p-1 rounded-lg text-zinc-400 hover:text-white"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
+              {/* Product Names */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-zinc-300 font-medium mb-1">اسم العطر بالعربية:</label>
+                  <label className="block text-zinc-300 font-medium mb-1">اسم العطر بالعربي *</label>
                   <input
                     type="text"
                     required
                     value={formNameAr}
                     onChange={(e) => setFormNameAr(e.target.value)}
-                    placeholder="مثال: لويس فيتون أومبري نوماد 100 مل"
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-zinc-300 font-medium mb-1">اسم العطر بالإنجليزية:</label>
-                  <input
-                    type="text"
-                    value={formNameEn}
-                    onChange={(e) => setFormNameEn(e.target.value)}
-                    placeholder="Ombre Nomade Louis Vuitton"
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500 font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-zinc-300 font-medium mb-1">الماركة (عربي):</label>
-                  <input
-                    type="text"
-                    value={formBrandAr}
-                    onChange={(e) => setFormBrandAr(e.target.value)}
+                    placeholder="مثال: عطر عنبر الصحراء الملكي"
                     className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200"
                   />
                 </div>
                 <div>
-                  <label className="block text-zinc-300 font-medium mb-1">السعر (ج.م):</label>
+                  <label className="block text-zinc-300 font-medium mb-1">اسم العطر بالإنجليزي</label>
+                  <input
+                    type="text"
+                    value={formNameEn}
+                    onChange={(e) => setFormNameEn(e.target.value)}
+                    placeholder="e.g. Royal Desert Amber"
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200"
+                  />
+                </div>
+              </div>
+
+              {/* Category & Brand */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-zinc-300 font-medium mb-1">قسم العطر (Category) *</label>
+                  <select
+                    value={formCategoryId}
+                    onChange={(e) => setFormCategoryId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-medium focus:border-amber-500"
+                  >
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.icon} {c.nameAr} ({c.nameEn})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-zinc-300 font-medium mb-1">دار العطر / البراند</label>
+                  <input
+                    type="text"
+                    value={formBrandAr}
+                    onChange={(e) => setFormBrandAr(e.target.value)}
+                    placeholder="روفي بارفيومز / Louis Vuitton / Dior"
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200"
+                  />
+                </div>
+              </div>
+
+              {/* Price & Stock */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-zinc-300 font-medium mb-1">سعر البيع (ج.م) *</label>
                   <input
                     type="number"
                     required
@@ -552,7 +864,7 @@ export default function MenuAdminPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-zinc-300 font-medium mb-1">السعر الأصلي قبل الخصم:</label>
+                  <label className="block text-zinc-300 font-medium mb-1">السعر الأصلي قبل الخصم (ج.م)</label>
                   <input
                     type="number"
                     value={formOriginalPrice}
@@ -561,7 +873,7 @@ export default function MenuAdminPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-zinc-300 font-medium mb-1">كمية المخزون:</label>
+                  <label className="block text-zinc-300 font-medium mb-1">الكمية بالمخزن</label>
                   <input
                     type="number"
                     value={formStockQty}
@@ -571,9 +883,10 @@ export default function MenuAdminPage() {
                 </div>
               </div>
 
+              {/* Type, Volume & Concentration */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-zinc-300 font-medium mb-1">نوع الإصدار:</label>
+                  <label className="block text-zinc-300 font-medium mb-1">درجة الأصالة / النوع:</label>
                   <select
                     value={formType}
                     onChange={(e) => setFormType(e.target.value)}
@@ -613,110 +926,172 @@ export default function MenuAdminPage() {
                 </div>
               </div>
 
-              {/* Olfactory Pyramid (الهرم العطري) */}
-              <div className="p-3.5 rounded-xl bg-black/40 border border-amber-500/20 space-y-3">
-                <span className="text-amber-400 font-serif font-bold text-xs flex items-center gap-1.5">
-                  <Sparkles size={14} />
-                  <span>الهرم العطري (Olfactory Pyramid):</span>
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  <div>
-                    <label className="block text-[10.5px] text-zinc-400 mb-0.5">القمة (Top Notes):</label>
-                    <input
-                      type="text"
-                      value={formTopNotesAr}
-                      onChange={(e) => setFormTopNotesAr(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10.5px] text-zinc-400 mb-0.5">القلب (Heart Notes):</label>
-                    <input
-                      type="text"
-                      value={formHeartNotesAr}
-                      onChange={(e) => setFormHeartNotesAr(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10.5px] text-zinc-400 mb-0.5">القاعدة (Base Notes):</label>
-                    <input
-                      type="text"
-                      value={formBaseNotesAr}
-                      onChange={(e) => setFormBaseNotesAr(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Image URL & Preset Selection */}
-              <div>
-                <label className="block text-zinc-300 font-medium mb-1">رابط صورة العطر:</label>
-                <input
-                  type="text"
-                  value={formImage}
-                  onChange={(e) => setFormImage(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-mono text-xs"
-                />
-                <div className="flex gap-2 mt-2">
-                  {[
-                    "/perfumes/ombre-nomade.webp",
-                    "/perfumes/baccarat-rouge.webp",
-                    "/perfumes/sauvage-elixir.webp",
-                    "/perfumes/tobacco-vanille.webp",
-                    "/perfumes/winter-amber.webp",
-                  ].map((img) => (
-                    <button
-                      key={img}
-                      type="button"
-                      onClick={() => setFormImage(img)}
-                      className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] text-zinc-400 border border-zinc-700"
-                    >
-                      {img.split("/").pop()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Flags */}
-              <div className="flex items-center gap-6 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div className="flex items-center gap-6 p-3 rounded-xl bg-zinc-950/60 border border-zinc-800">
+                <label className="flex items-center gap-2 cursor-pointer text-zinc-300">
                   <input
                     type="checkbox"
                     checked={formIsWinter}
                     onChange={(e) => setFormIsWinter(e.target.checked)}
-                    className="rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-0"
+                    className="accent-amber-500 rounded"
                   />
-                  <span className="text-zinc-200 font-medium">عطر ضمن تشكيلة الشتاء ❄️</span>
+                  <span>ضمن تشكيلة الشتاء الفاخرة (Winter 1) ❄️</span>
                 </label>
-
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer text-zinc-300">
                   <input
                     type="checkbox"
                     checked={formIsFeatured}
                     onChange={(e) => setFormIsFeatured(e.target.checked)}
-                    className="rounded bg-zinc-900 border-zinc-700 text-amber-500 focus:ring-0"
+                    className="accent-amber-500 rounded"
                   />
-                  <span className="text-zinc-200 font-medium">عطر مميز (Featured) 🌟</span>
+                  <span>عطر مميز يظهر في الصفحة الرئيسية ⭐</span>
                 </label>
               </div>
 
+              {/* Image Upload Zone (ImgBB) */}
+              <div className="p-4 rounded-xl bg-zinc-950/80 border border-amber-500/20">
+                <ImageUploader
+                  value={formImage}
+                  onChange={setFormImage}
+                  label="صورة العطر الرسمية (رفع مباشر عبر ImgBB)"
+                  helperText="اختر صورة العطر من جهازك وسيتم رفعها تلقائياً إلى ImgBB واستخراج الرابط الدائم"
+                />
+              </div>
+
               {/* Submit Buttons */}
-              <div className="flex gap-3 pt-4 border-t border-zinc-800">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-black font-bold text-xs shadow-lg shadow-amber-500/20"
-                >
-                  {saving ? "جاري الحفظ..." : editingProduct ? "تحديث العطر" : "إضافة العطر للكتالوج"}
-                </button>
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white text-xs font-medium"
+                  className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition"
                 >
                   إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-6 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-black font-bold transition disabled:opacity-50"
+                >
+                  {saving ? "جاري الحفظ..." : editingProduct ? "تعديل العطر" : "إضافة العطر للكتالوج"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add / Edit Category Modal */}
+      {isCatModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-lg bg-[#120e1c] border border-amber-500/30 rounded-2xl p-6 shadow-2xl relative my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-4">
+              <h3 className="text-base font-bold text-amber-300 font-serif flex items-center gap-2">
+                <FolderTree size={18} />
+                <span>{editingCategory ? "تعديل بيانات القسم" : "إضافة قسم جديد لمتجر روفي"}</span>
+              </h3>
+              <button
+                onClick={() => setIsCatModalOpen(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCategory} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-zinc-300 font-medium mb-1">اسم القسم بالعربي *</label>
+                  <input
+                    type="text"
+                    required
+                    value={catNameAr}
+                    onChange={(e) => setCatNameAr(e.target.value)}
+                    placeholder="مثال: عطور الشتاء الملكية"
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-zinc-300 font-medium mb-1">اسم القسم بالإنجليزي</label>
+                  <input
+                    type="text"
+                    value={catNameEn}
+                    onChange={(e) => setCatNameEn(e.target.value)}
+                    placeholder="e.g. Royal Winter Fragrances"
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-zinc-300 font-medium mb-1">أيقونة أو إيموجي القسم</label>
+                  <input
+                    type="text"
+                    value={catIcon}
+                    onChange={(e) => setCatIcon(e.target.value)}
+                    placeholder="❄️ أو 👑 أو ✨"
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-center text-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-zinc-300 font-medium mb-1">ترتيب الظهور</label>
+                  <input
+                    type="number"
+                    value={catSortOrder}
+                    onChange={(e) => setCatSortOrder(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-zinc-300 font-medium mb-1">الرابط الفرعي (Slug)</label>
+                  <input
+                    type="text"
+                    value={catSlug}
+                    onChange={(e) => setCatSlug(e.target.value)}
+                    placeholder="اختياري (تلقائي)"
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-zinc-300 font-medium mb-1">وصف القسم (عربي)</label>
+                <textarea
+                  rows={2}
+                  value={catDescAr}
+                  onChange={(e) => setCatDescAr(e.target.value)}
+                  placeholder="وصف مختصر لمجموعة العطور المندرجة تحت هذا القسم..."
+                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200"
+                />
+              </div>
+
+              {/* Category Image upload via ImgBB */}
+              <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800">
+                <ImageUploader
+                  value={catImage}
+                  onChange={setCatImage}
+                  label="صورة أو بانر ترويجي للقسم (اختياري - ImgBB)"
+                  helperText="صورة غلاف خاصة بالقسم تظهر عند تصفح التصنيف"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setIsCatModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingCat}
+                  className="px-6 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-black font-bold transition disabled:opacity-50"
+                >
+                  {savingCat ? "جاري الحفظ..." : editingCategory ? "تعديل القسم" : "إنشاء القسم"}
                 </button>
               </div>
             </form>

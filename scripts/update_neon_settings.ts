@@ -1,20 +1,24 @@
 import { prisma } from "../lib/prisma";
 
 async function main() {
+  const addressAr = "مصر الجديدة — طريق العروبة ومساكن شيراتون (بالقرب من مطار القاهرة) — القاهرة";
+  const addressEn = "Heliopolis — El-Orouba Rd & Sheraton (Near Cairo Airport) — Cairo";
+  const googleMapsUrl = "https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7";
+
   const settings = await prisma.storeSettings.upsert({
     where: { id: "rovy_settings" },
     create: {
       id: "rovy_settings",
-      storeNameAr: "روفي ستور — للعطور الفاخرة",
+      storeNameAr: "روفي ستور — بوتيك العطور الفاخرة",
       storeNameEn: "Rovy Store — Haute Parfumerie",
-      taglineAr: "أفخم العطور العالمية والبدائل المستوحاة بثبات وأصالة لا تُقاوم",
+      taglineAr: "أفخم العطور العالمية والأصلية وبدائل النيش الملكية بثبات وفوحان استثنائي",
       taglineEn: "Exclusive Designer, Authentic Testers & Inspired Niche Fragrances",
       whatsappPhone: "01503012856",
       hotline: "01503012856",
       secondaryPhone: "01556718249",
-      googleMapsUrl: "https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7",
-      addressAr: "6 أكتوبر — الحي الرابع (شارع مجلس الدولة) — الجيزة",
-      addressEn: "6th of October — 4th District (Council of State St) — Giza",
+      googleMapsUrl,
+      addressAr,
+      addressEn,
       workingHoursAr: "يومياً من 10 صباحاً وحتى 12 منتصف الليل",
       workingHoursEn: "Daily from 10:00 AM to 12:00 Midnight",
       instagramHandle: "rovystore2",
@@ -27,16 +31,16 @@ async function main() {
       whatsappPhone: "01503012856",
       hotline: "01503012856",
       secondaryPhone: "01556718249",
-      googleMapsUrl: "https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7",
-      addressAr: "6 أكتوبر — الحي الرابع (شارع مجلس الدولة) — الجيزة",
-      addressEn: "6th of October — 4th District (Council of State St) — Giza",
+      googleMapsUrl,
+      addressAr,
+      addressEn,
       workingHoursAr: "يومياً من 10 صباحاً وحتى 12 منتصف الليل",
       workingHoursEn: "Daily from 10:00 AM to 12:00 Midnight",
       instagramHandle: "rovystore2",
     },
   });
 
-  console.log("Successfully updated settings in Neon DB:", settings);
+  console.log("Successfully updated Neon DB settings with Heliopolis address:", settings);
 }
 
 main()

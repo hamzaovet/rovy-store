@@ -169,7 +169,7 @@ export default function VipCardPage() {
             >
               <MapPin size={15} className="text-amber-400 shrink-0" />
               <span className="text-[11px] line-clamp-1 underline decoration-amber-500/40">
-                {isAr ? (settings.addressAr || "6 أكتوبر — الحي الرابع (شارع مجلس الدولة)") : settings.addressEn}
+                {isAr ? (settings.addressAr || "مصر الجديدة — طريق العروبة ومساكن شيراتون (بالقرب من مطار القاهرة)") : settings.addressEn}
               </span>
             </a>
             <span className="text-[10px] text-emerald-400/80 pr-5 flex items-center gap-1">

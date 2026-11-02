@@ -1,5 +1,14 @@
 import os
 from PIL import Image, ImageDraw, ImageFont
+import arabic_reshaper
+from bidi.algorithm import get_display
+
+def ar(text):
+    """Reshape and reorder Arabic text for proper RTL display in PIL."""
+    if not text:
+        return ""
+    reshaped = arabic_reshaper.reshape(text)
+    return get_display(reshaped)
 
 def create_card():
     width = 1200
@@ -13,8 +22,8 @@ def create_card():
     gold_bright = (245, 222, 179) # #f5deb3
     gold_primary = (212, 175, 55) # #d4af37
     gold_dark = (140, 105, 30)
-    zinc_text = (205, 200, 215)
-    zinc_dim = (150, 145, 155)
+    zinc_text = (215, 210, 225)
+    zinc_dim = (150, 145, 160)
     
     # Outer Decorative Frames
     m1 = 28
@@ -27,12 +36,19 @@ def create_card():
         draw.polygon([(cx, cy - 6), (cx + 6, cy), (cx, cy + 6), (cx - 6, cy)], fill=gold_bright)
 
     # Fonts
+    font_candidates = [
+        "C:\\Windows\\Fonts\\arialbd.ttf",
+        "C:\\Windows\\Fonts\\arial.ttf",
+        "C:\\Windows\\Fonts\\segoeui.ttf",
+        "C:\\Windows\\Fonts\\timesbd.ttf"
+    ]
+    
     try:
         font_logo = ImageFont.truetype("timesbd.ttf", 46)
         font_sub = ImageFont.truetype("arialbd.ttf", 16)
         font_tag = ImageFont.truetype("arial.ttf", 15)
-        font_qr_title = ImageFont.truetype("arialbd.ttf", 18)
-        font_qr_sub = ImageFont.truetype("arial.ttf", 13)
+        font_qr_title = ImageFont.truetype("arialbd.ttf", 20)
+        font_qr_sub = ImageFont.truetype("arial.ttf", 14)
         font_contacts = ImageFont.truetype("arialbd.ttf", 15)
         font_badge = ImageFont.truetype("arialbd.ttf", 12)
     except:
@@ -76,12 +92,14 @@ def create_card():
         draw.rounded_rectangle([box1_x1 + 25, box1_y1 + 35, box1_x1 + 25 + 190, box1_y1 + 35 + 190], radius=10, fill=(255, 255, 255))
         im.paste(qr1_img, (box1_x1 + 25, box1_y1 + 35))
     
-    # Text inside Box 1
+    # Text inside Box 1 (Correct Shaped Arabic)
     t1_x = box1_x1 + 235
-    draw.text((t1_x, box1_y1 + 55), "ONLINE STORE", fill=gold_primary, font=font_sub)
-    draw.text((t1_x, box1_y1 + 85), "زيارة المتجر الإلكتروني", fill=gold_bright, font=font_qr_title)
-    draw.text((t1_x, box1_y1 + 120), "تصفح أفخم العطور\nوالشراء بضغطة زر\nالدفع عند الاستلام", fill=zinc_text, font=font_qr_sub)
-    draw.text((t1_x, box1_y1 + 195), "rovy-store.vercel.app", fill=gold_primary, font=font_qr_sub)
+    draw.text((t1_x, box1_y1 + 45), "ONLINE STORE", fill=gold_primary, font=font_sub)
+    draw.text((t1_x, box1_y1 + 75), ar("زيارة المتجر الإلكتروني"), fill=gold_bright, font=font_qr_title)
+    draw.text((t1_x, box1_y1 + 115), ar("تصفح أفخم العطور العالمية"), fill=zinc_text, font=font_qr_sub)
+    draw.text((t1_x, box1_y1 + 140), ar("طلب فوري والدفع عند الاستلام"), fill=zinc_text, font=font_qr_sub)
+    draw.text((t1_x, box1_y1 + 165), ar("فحص وتجربة الرائحة قبل الدفع"), fill=zinc_text, font=font_qr_sub)
+    draw.text((t1_x, box1_y1 + 205), "rovy-store.vercel.app", fill=gold_primary, font=font_qr_sub)
 
     # Box 2: APK Download QR (Right Center)
     box2_x1 = 630
@@ -92,25 +110,28 @@ def create_card():
         draw.rounded_rectangle([box2_x1 + 25, box1_y1 + 35, box2_x1 + 25 + 190, box1_y1 + 35 + 190], radius=10, fill=(255, 255, 255))
         im.paste(qr2_img, (box2_x1 + 25, box1_y1 + 35))
 
-    # Text inside Box 2
+    # Text inside Box 2 (Correct Shaped Arabic)
     t2_x = box2_x1 + 235
-    draw.text((t2_x, box1_y1 + 55), "ANDROID APP (APK)", fill=(80, 220, 140), font=font_sub)
-    draw.text((t2_x, box1_y1 + 85), "تحميل تطبيق الأندرويد", fill=gold_bright, font=font_qr_title)
-    draw.text((t2_x, box1_y1 + 120), "تطبيق أصلي سريع\nإشعارات فورية بالعروض\nطلب مباشر وسهل", fill=zinc_text, font=font_qr_sub)
-    draw.text((t2_x, box1_y1 + 195), "rovy-store.apk (v1.0.0)", fill=(80, 220, 140), font=font_qr_sub)
+    draw.text((t2_x, box1_y1 + 45), "ANDROID APP (APK)", fill=(80, 220, 140), font=font_sub)
+    draw.text((t2_x, box1_y1 + 75), ar("تحميل تطبيق الأندرويد"), fill=gold_bright, font=font_qr_title)
+    draw.text((t2_x, box1_y1 + 115), ar("تطبيق أصلي سريع وفوري"), fill=zinc_text, font=font_qr_sub)
+    draw.text((t2_x, box1_y1 + 140), ar("إشعارات بأحدث العروض والخصومات"), fill=zinc_text, font=font_qr_sub)
+    draw.text((t2_x, box1_y1 + 165), ar("متابعة حالة شحنتك لحظياً"), fill=zinc_text, font=font_qr_sub)
+    draw.text((t2_x, box1_y1 + 205), "rovy-store.apk (v1.0.0)", fill=(80, 220, 140), font=font_qr_sub)
 
     # Bottom Contact Bar
     draw.line([70, 555, width - 70, 555], fill=gold_dark, width=1)
     
-    # 3 Contacts items
+    # Contacts items
     cy = 575
-    draw.text((80, cy), "Phone & WhatsApp: 01503012856 / 01556718249", fill=gold_bright, font=font_contacts)
-    draw.text((580, cy), "Instagram: @rovystore2", fill=gold_bright, font=font_contacts)
-    draw.text((840, cy), "6th of October — 4th District", fill=zinc_text, font=font_contacts)
+    draw.text((75, cy), "Phone & WhatsApp: 01503012856 / 01556718249", fill=gold_bright, font=font_contacts)
+    draw.text((615, cy), "Instagram: @rovystore2", fill=gold_bright, font=font_contacts)
+    draw.text((855, cy), "Heliopolis — Sheraton / Cairo", fill=zinc_text, font=font_contacts)
 
-    # Secondary Tagline & Google Maps Location
-    draw.text((width // 2 - 325, 615), "6 October City • 4th District (Council of State St) • Google Maps Verified Location", fill=gold_primary, font=font_qr_sub)
-    draw.text((width // 2 - 200, 638), "Boutique Fragrance Experience • Inspect & Test Prior to Payment", fill=zinc_dim, font=font_badge)
+    # Secondary Tagline & Correct Heliopolis Address
+    addr_line = ar("مصر الجديدة — طريق العروبة ومساكن شيراتون (بالقرب من مطار القاهرة)")
+    draw.text((width // 2 - 250, 615), addr_line, fill=gold_primary, font=font_qr_sub)
+    draw.text((width // 2 - 220, 640), "Google Maps Verified Location • Delivery Across All Egypt", fill=zinc_dim, font=font_badge)
 
     # Save to public and to artifact dir
     out_public = os.path.join(base_dir, 'public', 'rovy-store-official-card.png')
