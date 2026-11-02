@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "../context/LanguageContext";
 import { useCart } from "../context/CartContext";
+import { useStoreSettings } from "../context/StoreSettingsContext";
 import {
   ShoppingBag,
   Menu,
@@ -22,6 +23,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const { lang, toggleLanguage, t } = useLanguage();
   const { totalCount, setIsCartOpen } = useCart();
+  const { settings } = useStoreSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Hide Navbar completely on ERP Management & POS routes
@@ -33,11 +35,21 @@ export default function Navbar() {
     pathname === "/reports" ||
     pathname === "/customers" ||
     pathname === "/users" ||
+    pathname === "/suppliers" ||
+    pathname === "/offers-admin" ||
+    pathname === "/sales-returns" ||
+    pathname === "/settings" ||
     pathname === "/login";
 
   if (isErpRoute) {
     return null;
   }
+
+  const phoneDisplay = settings.hotline || settings.whatsappPhone || "01000000000";
+  const announcementText =
+    lang === "ar"
+      ? settings.announcementAr || t("free_shipping_notice")
+      : settings.announcementEn || t("free_shipping_notice");
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -46,15 +58,15 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 text-amber-300 mx-auto sm:mx-0 font-medium">
             <Sparkles size={14} className="text-amber-400 animate-pulse" />
-            <span>{t("free_shipping_notice")}</span>
+            <span>{announcementText}</span>
           </div>
           <div className="hidden sm:flex items-center gap-4 text-zinc-400">
             <a
-              href="tel:01010568615"
+              href={`tel:${phoneDisplay}`}
               className="flex items-center gap-1.5 hover:text-amber-400 transition"
             >
               <Phone size={12} />
-              <span>01010568615</span>
+              <span>{phoneDisplay}</span>
             </a>
             <span className="text-zinc-600">•</span>
             <div className="flex items-center gap-1 text-emerald-400">
@@ -77,7 +89,9 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col">
               <span className="font-serif font-black text-lg sm:text-xl tracking-wider text-gold-gradient">
-                {lang === "ar" ? "روفي ستور" : "ROVY STORE"}
+                {lang === "ar"
+                  ? settings.storeNameAr || "روفي ستور"
+                  : settings.storeNameEn || "ROVY STORE"}
               </span>
               <span className="text-[10px] tracking-widest uppercase text-amber-500/80 font-medium -mt-0.5">
                 {lang === "ar" ? "بوتيك العطور الفاخرة" : "Haute Parfumerie"}

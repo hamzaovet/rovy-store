@@ -33,7 +33,7 @@ interface ThermalReceiptModalProps {
   onClose: () => void;
 }
 
-export function printThermalReceipt(order: PrintableOrder) {
+export function printThermalReceipt(order: PrintableOrder, hotline?: string) {
   playSound("cash");
 
   const parsedItems: Array<{
@@ -273,7 +273,7 @@ export function printThermalReceipt(order: PrintableOrder) {
       <div class="footer">
         <p style="font-weight: bold; margin: 2px 0;">✨ شكراً لاختياركم روفي ستور ✨</p>
         <p style="margin: 2px 0;">استمتعوا بتجربة عطرية لا تُنسى وثبات يدوم طويلاً</p>
-        <p style="margin: 4px 0 0 0; font-size: 10px;">خدمة العملاء والواتساب: 01010568615</p>
+        <p style="margin: 4px 0 0 0; font-size: 10px;">${hotline ? `خدمة العملاء والواتساب: ${hotline}` : "روفي ستور — بوتيك العطور الفاخرة"}</p>
       </div>
 
       <script>

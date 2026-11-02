@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "../context/LanguageContext";
+import { useStoreSettings } from "../context/StoreSettingsContext";
 import {
   Phone,
   MessageCircle,
@@ -20,6 +21,7 @@ import InstagramIcon from "./InstagramIcon";
 export default function Footer() {
   const pathname = usePathname();
   const { lang, t } = useLanguage();
+  const { settings } = useStoreSettings();
   const isAr = lang === "ar";
 
   // Hide Footer on ERP routes
@@ -31,11 +33,26 @@ export default function Footer() {
     pathname === "/reports" ||
     pathname === "/customers" ||
     pathname === "/users" ||
+    pathname === "/suppliers" ||
+    pathname === "/offers-admin" ||
+    pathname === "/sales-returns" ||
+    pathname === "/settings" ||
     pathname === "/login";
 
   if (isErpRoute) {
     return null;
   }
+
+  const phoneDisplay = settings.hotline || settings.whatsappPhone || "01000000000";
+  const cleanPhone = phoneDisplay.replace(/\D/g, "");
+  const waNumber = cleanPhone.startsWith("0") ? `2${cleanPhone}` : cleanPhone;
+  const instagram = settings.instagramHandle || "rovystore2";
+  const addressText = isAr
+    ? settings.addressAr || "القاهرة والشيخ زايد — شحن سريع لمصر كلها"
+    : settings.addressEn || "Cairo & Sheikh Zayed — Express Delivery All Egypt";
+  const hoursText = isAr
+    ? settings.workingHoursAr || "يومياً من 10 صباحاً وحتى 12 منتصف الليل"
+    : settings.workingHoursEn || "Daily 10:00 AM - 12:00 Midnight";
 
   return (
     <footer className="bg-black/90 border-t border-amber-500/20 text-zinc-400 mt-20">
@@ -98,7 +115,9 @@ export default function Footer() {
             </div>
             <div className="flex flex-col">
               <span className="font-serif font-black text-xl text-gold-gradient">
-                {isAr ? "روفي ستور" : "ROVY STORE"}
+                {isAr
+                  ? settings.storeNameAr || "روفي ستور"
+                  : settings.storeNameEn || "ROVY STORE"}
               </span>
               <span className="text-[10px] tracking-widest uppercase text-amber-500/80 font-medium">
                 {isAr ? "بوتيك العطور الفاخرة" : "Haute Parfumerie"}
@@ -113,16 +132,16 @@ export default function Footer() {
 
           <div className="flex items-center gap-3 pt-2">
             <a
-              href="https://www.instagram.com/rovystore2"
+              href={`https://www.instagram.com/${instagram}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-amber-400 hover:border-amber-400 transition"
-              title="Instagram: @rovystore2"
+              title={`Instagram: @${instagram}`}
             >
               <InstagramIcon size={17} />
             </a>
             <a
-              href="https://wa.me/201010568615"
+              href={`https://wa.me/${waNumber}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-emerald-400 hover:border-emerald-400 transition"
@@ -131,7 +150,7 @@ export default function Footer() {
               <MessageCircle size={17} />
             </a>
             <a
-              href="tel:01010568615"
+              href={`tel:${phoneDisplay}`}
               className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-amber-400 hover:border-amber-400 transition"
               title="Phone Support"
             >
@@ -200,7 +219,9 @@ export default function Footer() {
             </li>
             <li>
               <a
-                href="https://wa.me/201010568615?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%B9%D8%B7%D8%B1%20%D9%85%D8%B9%D9%8A%D9%86"
+                href={`https://wa.me/${waNumber}?text=${encodeURIComponent(
+                  "مرحباً، أود الاستفسار عن عطور روفي ستور"
+                )}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-emerald-400 transition flex items-center gap-1.5"
@@ -221,27 +242,25 @@ export default function Footer() {
             <p className="flex items-start gap-2">
               <Phone size={14} className="text-amber-400 shrink-0 mt-0.5" />
               <span>
-                <strong className="text-zinc-200">01010568615</strong>
+                <strong className="text-zinc-200">{phoneDisplay}</strong>
                 <br />
-                <span className="text-[11px] text-zinc-500">
-                  {isAr ? "يومياً من 10 صباحاً وحتى 12 منتصف الليل" : "Daily 10:00 AM - 12:00 AM"}
-                </span>
+                <span className="text-[11px] text-zinc-500">{hoursText}</span>
               </span>
             </p>
             <p className="flex items-start gap-2">
               <InstagramIcon size={14} className="text-amber-400 shrink-0 mt-0.5" />
               <a
-                href="https://www.instagram.com/rovystore2"
+                href={`https://www.instagram.com/${instagram}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-amber-400 transition"
               >
-                @rovystore2
+                @{instagram}
               </a>
             </p>
             <div className="pt-2">
               <span className="inline-block px-3 py-1.5 rounded-lg bg-amber-950/40 border border-amber-500/20 text-amber-300 text-[11px] font-semibold">
-                {isAr ? "القاهرة والشيخ زايد — شحن سريع لمصر كلها" : "Cairo & Zayed — Express Shipping"}
+                {addressText}
               </span>
             </div>
           </div>

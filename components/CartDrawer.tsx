@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "../context/LanguageContext";
 import { useCart } from "../context/CartContext";
+import { useStoreSettings } from "../context/StoreSettingsContext";
 import {
   X,
   ShoppingBag,
@@ -29,15 +30,19 @@ export default function CartDrawer() {
     deliveryFee,
     total,
   } = useCart();
+  const { settings } = useStoreSettings();
 
   if (!isCartOpen) return null;
 
-  const freeShippingThreshold = 1500;
+  const freeShippingThreshold = settings.freeShippingThreshold || 1500;
   const neededForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
   const freeShippingProgress = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
 
   // WhatsApp order summary
-  const whatsappNumber = "201010568615";
+  const rawPhone = settings.whatsappPhone || "01000000000";
+  const cleanPhone = rawPhone.replace(/\D/g, "");
+  const whatsappNumber = cleanPhone.startsWith("0") ? `2${cleanPhone}` : cleanPhone;
+
   const whatsappCartText = encodeURIComponent(
     `مساء الخير، أود طلب العطور التالية من روفي ستور (Rovy Store):\n` +
       items

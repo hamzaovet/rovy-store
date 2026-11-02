@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "../../context/LanguageContext";
 import { useCart } from "../../context/CartContext";
+import { useStoreSettings } from "../../context/StoreSettingsContext";
 import {
   ShieldCheck,
   Truck,
@@ -22,6 +23,7 @@ import {
 export default function CheckoutPage() {
   const { lang, dir, t } = useLanguage();
   const { items, subtotal, deliveryFee, total, clearCart } = useCart();
+  const { settings } = useStoreSettings();
   const isAr = lang === "ar";
 
   const [name, setName] = useState("");
@@ -127,7 +129,7 @@ export default function CheckoutPage() {
 
           <div className="space-y-3 pt-2">
             <a
-              href={`https://wa.me/201010568615?text=${whatsappText}`}
+              href={`https://wa.me/${(settings.whatsappPhone || "01000000000").replace(/\D/g, "").replace(/^0/, "20")}?text=${whatsappText}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-black font-black text-sm flex items-center justify-center gap-2 shadow-lg transition"

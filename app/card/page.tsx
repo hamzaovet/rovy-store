@@ -4,6 +4,7 @@ import React, { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "../../context/LanguageContext";
+import { useStoreSettings } from "../../context/StoreSettingsContext";
 import {
   Download,
   ExternalLink,
@@ -20,6 +21,7 @@ import InstagramIcon from "../../components/InstagramIcon";
 
 export default function VipCardPage() {
   const { lang, dir, t } = useLanguage();
+  const { settings } = useStoreSettings();
   const isAr = lang === "ar";
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -136,17 +138,17 @@ export default function VipCardPage() {
         <div className="relative z-10 border-t border-amber-500/20 pt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-zinc-300 text-center sm:text-start">
           <div className="flex items-center justify-center sm:justify-start gap-2">
             <Phone size={15} className="text-amber-400 shrink-0" />
-            <span className="font-mono font-bold">01010568615</span>
+            <span className="font-mono font-bold">{settings.hotline || settings.whatsappPhone}</span>
           </div>
 
           <div className="flex items-center justify-center sm:justify-start gap-2">
             <InstagramIcon size={15} className="text-amber-400 shrink-0" />
-            <span className="font-medium">@rovystore2</span>
+            <span className="font-medium">@{settings.instagramHandle || "rovystore2"}</span>
           </div>
 
           <div className="flex items-center justify-center sm:justify-start gap-2">
             <MapPin size={15} className="text-amber-400 shrink-0" />
-            <span className="text-[11px]">{isAr ? "القاهرة والشيخ زايد" : "Cairo & Sheikh Zayed"}</span>
+            <span className="text-[11px]">{isAr ? settings.addressAr : settings.addressEn}</span>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../../../context/LanguageContext";
 import { useCart } from "../../../context/CartContext";
+import { useStoreSettings } from "../../../context/StoreSettingsContext";
 import ProductCard from "../../../components/ProductCard";
 import {
   Sparkles,
@@ -39,6 +40,7 @@ export default function ProductDetailsClient({
 }: ProductDetailsClientProps) {
   const { lang, dir, t } = useLanguage();
   const { addToCart } = useCart();
+  const { settings } = useStoreSettings();
   const router = useRouter();
   const isAr = lang === "ar";
 
@@ -304,7 +306,7 @@ export default function ProductDetailsClient({
               </button>
 
               <a
-                href={`https://wa.me/201010568615?text=${whatsappText}`}
+                href={`https://wa.me/${(settings.whatsappPhone || "01000000000").replace(/\D/g, "").replace(/^0/, "20")}?text=${whatsappText}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-3 px-4 rounded-xl bg-emerald-600/20 border border-emerald-500/40 hover:bg-emerald-600/30 text-emerald-400 text-xs font-bold flex items-center justify-center gap-2 transition text-center"

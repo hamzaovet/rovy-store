@@ -7,12 +7,16 @@ import { useStaff } from "@/context/StaffContext";
 import { playSound, isSoundEnabled, setSoundEnabled } from "@/lib/sounds";
 import {
   MonitorSmartphone,
-  ChefHat,
-  Package,
+  Truck,
+  RotateCcw,
   Layers,
+  Handshake,
+  Package,
+  Gift,
   CircleDollarSign,
   UserCheck,
   Shield,
+  Settings,
   LogOut,
   ExternalLink,
   Menu,
@@ -20,20 +24,28 @@ import {
   Volume2,
   VolumeX,
   Sparkles,
-  ShoppingBag,
-  Flame,
-  Truck,
 } from "lucide-react";
 
 interface ErpLayoutProps {
   children: React.ReactNode;
-  activeItem?: "cashier" | "orders" | "menu" | "inventory" | "reports" | "customers" | "users";
+  activeItem?:
+    | "cashier"
+    | "orders"
+    | "sales-returns"
+    | "menu"
+    | "suppliers"
+    | "inventory"
+    | "offers"
+    | "reports"
+    | "customers"
+    | "users"
+    | "settings";
 }
 
 export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentUser, logout, isAuthenticated, loading } = useStaff();
+  const { currentUser, logout, loading } = useStaff();
 
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -56,16 +68,24 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
       ? "cashier"
       : pathname === "/dashboard"
       ? "orders"
+      : pathname === "/sales-returns"
+      ? "sales-returns"
       : pathname === "/menu-admin"
       ? "menu"
+      : pathname === "/suppliers"
+      ? "suppliers"
       : pathname === "/inventory"
       ? "inventory"
+      : pathname === "/offers-admin"
+      ? "offers"
       : pathname === "/reports" || pathname === "/expenses"
       ? "reports"
       : pathname === "/customers"
       ? "customers"
       : pathname === "/users"
       ? "users"
+      : pathname === "/settings"
+      ? "settings"
       : "orders");
 
   const toggleSound = () => {
@@ -87,7 +107,7 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
       href: "/cashier",
       label: "كاشير نقطة البيع (POS)",
       icon: MonitorSmartphone,
-      badge: "بيع فوري",
+      badge: "فوري",
     },
     {
       id: "orders",
@@ -97,16 +117,37 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
       badge: "لوجستيات",
     },
     {
+      id: "sales-returns",
+      href: "/sales-returns",
+      label: "مرتجعات المبيعات للعملاء",
+      icon: RotateCcw,
+      badge: "حسابات",
+    },
+    {
       id: "menu",
       href: "/menu-admin",
-      label: "كتالوج العطور وقائمة الأسعار",
+      label: "كتالوج العطور والأسعار",
       icon: Layers,
+    },
+    {
+      id: "suppliers",
+      href: "/suppliers",
+      label: "الموردين وفواتير الشراء",
+      icon: Handshake,
+      badge: "ERP",
     },
     {
       id: "inventory",
       href: "/inventory",
-      label: "المخزون وتوريد الزيوت والزجاجات",
+      label: "المخزون وتوريد الزيوت",
       icon: Package,
+    },
+    {
+      id: "offers",
+      href: "/offers-admin",
+      label: "العروض والخصومات الذكية",
+      icon: Gift,
+      badge: "خصومات",
     },
     {
       id: "reports",
@@ -117,7 +158,7 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
     {
       id: "customers",
       href: "/customers",
-      label: "قاعدة بيانات العملاء والـ CRM",
+      label: "قاعدة بيانات العملاء CRM",
       icon: UserCheck,
     },
     {
@@ -126,6 +167,12 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
       label: "إدارة الحسابات وطوارئ المالك",
       icon: Shield,
       badge: currentUser?.role === "owner" ? "سلطة مطلقة" : undefined,
+    },
+    {
+      id: "settings",
+      href: "/settings",
+      label: "إعدادات المتجر وبيانات الاتصال",
+      icon: Settings,
     },
   ];
 
@@ -159,12 +206,12 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
 
       {/* SIDEBAR */}
       <aside
-        className={`fixed lg:sticky top-0 right-0 h-screen z-50 w-[270px] bg-[#0b0811] border-l border-amber-500/20 flex flex-col justify-between p-4 transition-transform duration-300 ${
+        className={`fixed lg:sticky top-0 right-0 h-screen z-50 w-[275px] bg-[#0b0811] border-l border-amber-500/20 flex flex-col justify-between p-4 transition-transform duration-300 ${
           mobileMenuOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
-        } shadow-2xl lg:shadow-none`}
+        } shadow-2xl lg:shadow-none overflow-y-auto`}
       >
         {/* Top: Brand & Nav Links */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Logo & Brand Header */}
           <div className="flex items-center justify-between px-2 pt-1 pb-3 border-b border-amber-500/15">
             <Link
@@ -200,7 +247,7 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
           </div>
 
           {/* Navigation Items */}
-          <nav className="space-y-1.5">
+          <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentActive === item.id;
@@ -212,19 +259,19 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
                     playSound("click");
                     setMobileMenuOpen(false);
                   }}
-                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                     isActive
                       ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/20 scale-[1.02]"
                       : "text-zinc-300 hover:text-white hover:bg-zinc-800/60"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Icon size={17} className={isActive ? "text-black" : "text-amber-400/80"} />
+                    <Icon size={16} className={isActive ? "text-black" : "text-amber-400/80"} />
                     <span>{item.label}</span>
                   </div>
                   {item.badge && (
                     <span
-                      className={`text-[9.5px] px-1.5 py-0.5 rounded-md font-bold ${
+                      className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${
                         isActive
                           ? "bg-black/20 text-black"
                           : "bg-amber-500/15 text-amber-300 border border-amber-500/30"
@@ -240,9 +287,9 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
         </div>
 
         {/* Bottom: User Card & Store Link & Logout */}
-        <div className="space-y-2.5 pt-4 border-t border-amber-500/15">
+        <div className="space-y-2 pt-3 border-t border-amber-500/15 mt-3">
           {currentUser && (
-            <div className="p-3 rounded-xl bg-zinc-900/80 border border-amber-500/20 space-y-1">
+            <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-amber-500/20 space-y-0.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-300 font-serif">
                   {currentUser.name}
@@ -268,7 +315,7 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
               href="/"
               target="_blank"
               onClick={() => playSound("click")}
-              className="py-2 px-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 text-[11px] font-medium flex items-center justify-center gap-1.5 transition"
+              className="py-1.5 px-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 text-[11px] font-medium flex items-center justify-center gap-1.5 transition"
             >
               <ExternalLink size={13} />
               <span>المتجر</span>
@@ -276,7 +323,7 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
 
             <button
               onClick={handleLogout}
-              className="py-2 px-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/50 border border-red-500/30 text-red-300 text-[11px] font-medium flex items-center justify-center gap-1.5 transition"
+              className="py-1.5 px-2 rounded-xl bg-red-950/40 hover:bg-red-900/50 border border-red-500/30 text-red-300 text-[11px] font-medium flex items-center justify-center gap-1.5 transition"
             >
               <LogOut size={13} />
               <span>خروج</span>
@@ -301,7 +348,7 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
               <h2 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
                 <span>روفي ستور للـعـطـور الـفـاخـرة</span>
                 <span className="text-zinc-500">•</span>
-                <span className="text-amber-400 font-serif">ROVY Haute Parfumerie ERP</span>
+                <span className="text-amber-400 font-serif">Haute Parfumerie ERP Suite</span>
               </h2>
             </div>
           </div>
@@ -331,6 +378,16 @@ export default function ErpLayout({ children, activeItem }: ErpLayoutProps) {
             >
               <MonitorSmartphone size={15} />
               <span>شاشة الكاشير (POS)</span>
+            </Link>
+
+            {/* Settings Shortcut */}
+            <Link
+              href="/settings"
+              onClick={() => playSound("click")}
+              className="p-2 rounded-xl bg-zinc-800/70 border border-zinc-700/60 text-zinc-300 hover:text-amber-400 text-xs flex items-center gap-1"
+              title="إعدادات المتجر وبيانات الاتصال"
+            >
+              <Settings size={16} />
             </Link>
 
             {/* View Store */}

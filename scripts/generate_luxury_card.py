@@ -106,7 +106,7 @@ def create_card():
     
     # 3 Contacts items
     cy = 590
-    draw.text((120, cy), "Hotline & WhatsApp: 01010568615", fill=gold_bright, font=font_contacts)
+    draw.text((120, cy), "Hotline & WhatsApp: 01000000000", fill=gold_bright, font=font_contacts)
     draw.text((560, cy), "Instagram: @rovystore2", fill=gold_bright, font=font_contacts)
     draw.text((880, cy), "Cairo & Zayed • All Egypt", fill=zinc_text, font=font_contacts)
 
