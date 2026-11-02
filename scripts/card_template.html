@@ -12,43 +12,68 @@
       padding: 0;
     }
     body {
-      width: 1300px;
+      width: 1200px;
       height: 760px;
       margin: 0;
-      padding: 40px;
+      padding: 30px;
       background: #040307;
-      font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+      font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
     .card {
       position: relative;
-      width: 1220px;
-      height: 680px;
+      width: 1140px;
+      height: 700px;
       border-radius: 36px;
-      background: radial-gradient(circle at 10% 20%, rgba(217, 119, 6, 0.12) 0%, transparent 40%),
-                  radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.08) 0%, transparent 45%),
-                  linear-gradient(135deg, #130f1e 0%, #0a0711 50%, #050408 100%);
-      border: 2px solid rgba(245, 158, 11, 0.35);
-      box-shadow: 0 0 60px rgba(245, 158, 11, 0.15),
-                  0 25px 50px -12px rgba(0, 0, 0, 0.95),
-                  inset 0 1px 2px rgba(254, 243, 199, 0.25);
-      padding: 42px 48px;
+      background: radial-gradient(circle at 10% 15%, rgba(217, 119, 6, 0.16) 0%, transparent 45%),
+                  radial-gradient(circle at 90% 85%, rgba(245, 158, 11, 0.10) 0%, transparent 50%),
+                  linear-gradient(145deg, #130e20 0%, #090710 50%, #040306 100%);
+      border: 2px solid rgba(245, 158, 11, 0.45);
+      box-shadow: 0 0 70px rgba(245, 158, 11, 0.20),
+                  0 30px 60px -15px rgba(0, 0, 0, 0.98),
+                  inset 0 1px 2px rgba(254, 243, 199, 0.3);
+      padding: 38px 46px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       overflow: hidden;
     }
     
-    /* Decorative inner frame */
+    /* Decorative inner hairline frame */
     .card::before {
       content: "";
       position: absolute;
       inset: 12px;
       border-radius: 26px;
-      border: 1px solid rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      pointer-events: none;
+    }
+
+    /* Ambient background glows */
+    .glow-top {
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 320px;
+      height: 320px;
+      background: rgba(245, 158, 11, 0.15);
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .glow-bottom {
+      position: absolute;
+      bottom: -100px;
+      left: -100px;
+      width: 320px;
+      height: 320px;
+      background: rgba(217, 119, 6, 0.12);
+      border-radius: 50%;
+      filter: blur(80px);
       pointer-events: none;
     }
 
@@ -57,8 +82,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(245, 158, 11, 0.2);
-      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(245, 158, 11, 0.22);
+      padding-bottom: 22px;
       position: relative;
       z-index: 2;
     }
@@ -68,125 +93,123 @@
       gap: 20px;
     }
     .logo-badge {
-      width: 72px;
-      height: 72px;
-      border-radius: 22px;
+      width: 68px;
+      height: 68px;
+      border-radius: 20px;
       background: linear-gradient(135deg, #fef3c7 0%, #f59e0b 50%, #b45309 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+      box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.7);
       border: 2px solid rgba(255, 255, 255, 0.4);
+      flex-shrink: 0;
     }
     .logo-letter {
       font-family: 'Cinzel', serif;
-      font-size: 40px;
+      font-size: 38px;
       font-weight: 900;
       color: #0c0814;
     }
     .brand-text h1 {
-      font-size: 34px;
+      font-size: 32px;
       font-weight: 900;
       letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #ffffff 0%, #fef3c7 40%, #f59e0b 80%, #d97706 100%);
+      background: linear-gradient(135deg, #ffffff 0%, #fef3c7 40%, #fbbf24 80%, #d97706 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
+      line-height: 1.2;
     }
     .brand-text p {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 700;
       color: #fbbf24;
       letter-spacing: 0.5px;
     }
     .vip-pill {
-      padding: 8px 20px;
+      padding: 8px 22px;
       border-radius: 9999px;
       background: rgba(245, 158, 11, 0.12);
-      border: 1.5px solid rgba(245, 158, 11, 0.4);
+      border: 1.5px solid rgba(245, 158, 11, 0.45);
       color: #fde68a;
       font-family: 'Cinzel', sans-serif;
       font-size: 13px;
       font-weight: 900;
       letter-spacing: 2px;
-      box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.18);
     }
 
-    /* Dual QR Section */
+    /* Dual QR Section - Vertical Card Layout matching user screenshot */
     .qr-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 32px;
-      margin: 24px 0;
+      margin: 18px 0;
       position: relative;
       z-index: 2;
     }
     .qr-box {
       background: rgba(9, 6, 15, 0.75);
-      border: 1.5px solid rgba(245, 158, 11, 0.22);
+      border: 1.5px solid rgba(245, 158, 11, 0.28);
       border-radius: 24px;
-      padding: 24px 28px;
+      padding: 24px 20px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 24px;
-      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(8px);
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
     }
     .qr-white-card {
       background: #ffffff;
       padding: 10px;
       border-radius: 18px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-      flex-shrink: 0;
-      display: flex;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+      display: inline-block;
+      margin-bottom: 14px;
     }
     .qr-white-card img {
-      width: 142px;
-      height: 142px;
+      width: 155px;
+      height: 155px;
       display: block;
       image-rendering: pixelated;
-    }
-    .qr-info {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
     }
     .qr-badge-amber {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 7px;
       color: #fbbf24;
-      font-size: 15px;
+      font-size: 15.5px;
       font-weight: 800;
+      margin-bottom: 4px;
     }
     .qr-badge-emerald {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 7px;
       color: #34d399;
-      font-size: 15px;
+      font-size: 15.5px;
       font-weight: 800;
-    }
-    .qr-desc {
-      font-size: 12px;
-      color: #a1a1aa;
-      line-height: 1.4;
+      margin-bottom: 4px;
     }
     .qr-link {
-      font-family: monospace;
-      font-size: 12px;
-      color: #71717a;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      color: #a1a1aa;
       direction: ltr;
-      text-align: right;
-      margin-top: 4px;
+      display: block;
+      font-weight: 600;
     }
 
     /* Bottom Contacts Bar */
     .bottom-bar {
       display: grid;
-      grid-template-columns: 1.1fr 0.8fr 1.3fr;
+      grid-template-columns: 1.15fr 0.8fr 1.35fr;
       align-items: center;
-      border-top: 1px solid rgba(245, 158, 11, 0.2);
+      border-top: 1px solid rgba(245, 158, 11, 0.22);
       padding-top: 20px;
       position: relative;
       z-index: 2;
@@ -197,11 +220,11 @@
       gap: 12px;
     }
     .icon-circle {
-      width: 36px;
-      height: 36px;
-      border-radius: 12px;
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
       background: rgba(245, 158, 11, 0.12);
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      border: 1px solid rgba(245, 158, 11, 0.35);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -209,47 +232,50 @@
       flex-shrink: 0;
     }
     .phone-text strong {
-      font-size: 15px;
+      font-size: 16px;
       color: #f4f4f5;
-      font-family: monospace;
+      font-family: 'Courier New', Courier, monospace;
       font-weight: 900;
       letter-spacing: 0.5px;
       display: block;
+      line-height: 1.2;
     }
     .phone-text span {
-      font-size: 11px;
-      color: #a1a1aa;
-      font-family: monospace;
+      font-size: 12px;
+      color: #fbbf24;
+      font-family: 'Cairo', sans-serif;
+      font-weight: 700;
     }
     .insta-text {
-      font-size: 14px;
+      font-size: 15px;
       color: #f4f4f5;
-      font-weight: 700;
+      font-weight: 800;
       direction: ltr;
       text-align: right;
     }
     .loc-text strong {
-      font-size: 12.5px;
+      font-size: 13px;
       color: #f4f4f5;
       font-weight: 800;
       display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 320px;
+      line-height: 1.3;
     }
     .loc-text span {
-      font-size: 10.5px;
+      font-size: 11px;
       color: #34d399;
       font-weight: 700;
       display: flex;
       align-items: center;
       gap: 4px;
+      margin-top: 2px;
     }
   </style>
 </head>
 <body>
   <div class="card">
+    <div class="glow-top"></div>
+    <div class="glow-bottom"></div>
+
     <!-- Top Header -->
     <div class="top-bar">
       <div class="brand-section">
@@ -266,34 +292,32 @@
       </div>
     </div>
 
-    <!-- Dual QR Codes -->
+    <!-- Dual QR Codes Matching Site Screenshot (Right: Web, Left: APK in RTL) -->
     <div class="qr-container">
-      <!-- Web QR -->
+      <!-- Web QR (Right side in RTL) -->
       <div class="qr-box">
         <div class="qr-white-card">
-          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABVUlEQVRoge3Z4a2DMAwEYGcCRsiorJoRmCAuic8mpa3Un1i6E3p6ha+/jgSSivyXXT0Hzmg7/xRtJa6cZ8geweLq4ccAfUq7UsjSMet9qb68td/IEjMM6tql2lWy9Ew2HUft6J0sLbumaNXxj6X9nsnJHs7Usz52o3d8hSwTe8s2cZPlPepbyJ7N9uh9Zpyqs+vx8PWDLBuzxuWapQvm5wnI0jGY7ZqiR/Xa8UKlHXcCWSImvoCNG6C5RApZSrbeAGuw6iF7BNvto9c6DutRvz92yRIw22rw0aq2lrmCuZcsIxtjWa16X8hUjXUNWS6m6tVvek/DV8gSsTWQzdcyNlF/hOzhbI+W4x7QZQ//9ipFloIdS++xrpGl+kqWj6H322LH0jCiybKyeK0Swc/iwGRpGfbwfVcwMFk2ZkH1I74TdRo8gslSMfX4iJ4f5tM2QpaK/ZcXPcL0ocXeI5cAAAAASUVORK5CYII=" alt="Website QR" />
+          <img src="data:image/png;base64,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" alt="Website QR" />
         </div>
-        <div class="qr-info">
+        <div>
           <span class="qr-badge-amber">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             كود زيارة الموقع الإلكتروني
           </span>
-          <p class="qr-desc">تصفح الكتالوج الكامل والشراء الفوري أونلاين بضغطة زر مع ضمان التجربة قبل الدفع.</p>
           <span class="qr-link">rovy-store.vercel.app</span>
         </div>
       </div>
 
-      <!-- APK QR -->
+      <!-- APK QR (Left side in RTL) -->
       <div class="qr-box">
         <div class="qr-white-card">
-          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsAQMAAABDsxw2AAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAACH0lEQVRoge2YwZXDIAxE1RmlQWmUkk5Ya0YKGJy83T0Ptgl++qeJRlJi9rtVB1az2uK1ldGt9Gv3Desl7MAYbXX4jXM3pxz1+1pF2APmil5wpcbXyTUNFAJ3YZ+xChZ5GeF3Ygr7gjE1/UgHMy+FfcbCzpGabmmY2QrZzfXCAqOarc6rl3kxKuzA1hWWRqyHyA9LGEIjPZzF0I08SdLCNoziNUtfD2+7zmW8oAcL2zH6GZMKxrzKUeUtbUH7ELZh3jQYRf/wLYNAo4cI2zDGczyOvOzp6JHjirADQzoCqoPTCgpgwHC2CdsxpiUEtsnB0iPKYfz8F7ZikHckFfkZfQVudlbYgVFYB27jSl/E7cIeMM/De2Ky76JpTDsL2zAPWmZlHtk+uJX1701hf8VQIun9/C5g9jLS/kXYiQGawj5MNflngrAFs+l3Ck3HL1ON0f/Cblgd73DUypHBwmOJb0HYit1bjH9WpuM7MWFnYRsGaWuWwNtU417eXC9swULbSMwL7THTYJ5Bcgo7sJYujiZiMw7U0/Ml7MRS13VcIcD2YvNXm7AFM8seEjzC6WS+CduxXDXbb2XHuI80wnaMVs5SiKNZzCqY91zml7ADa1Cv+cM6CDYVtlBZ2IEhIXP3SoiOsS5hX7BsIxhXPBSp6c9L2BeMfddqzxqIu4SdhW1YiAozx6THnoEK6Kci7MToWLZc1MAGipkZm7D/Yr9bP9zH+aUBOkQDAAAAAElFTkSuQmCC" alt="APK QR" />
+          <img src="data:image/png;base64,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" alt="APK QR" />
         </div>
-        <div class="qr-info">
+        <div>
           <span class="qr-badge-emerald">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             كود تحميل تطبيق الأندرويد
           </span>
-          <p class="qr-desc">تحميل تطبيق الأندرويد الرسمي المباشر للحصول على إشعارات فورية وتتبع شحنتك لحظياً.</p>
           <span class="qr-link">rovy-store.apk (v1.0.0)</span>
         </div>
       </div>
@@ -304,7 +328,7 @@
       <!-- Phone & WhatsApp -->
       <div class="contact-item">
         <div class="icon-circle">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
         </div>
         <div class="phone-text">
           <strong>01503012856</strong>
@@ -313,25 +337,25 @@
       </div>
 
       <!-- Instagram -->
-      <div class="contact-item">
+      <div class="contact-item" style="justify-content: center;">
         <div class="icon-circle">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
         </div>
         <div class="insta-text">
           @rovystore2
         </div>
       </div>
 
-      <!-- Location Heliopolis -->
+      <!-- Location Heliopolis (Full & Unclipped) -->
       <div class="contact-item">
         <div class="icon-circle">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
         </div>
         <div class="loc-text">
           <strong>مصر الجديدة — طريق العروبة ومساكن شيراتون</strong>
           <span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
-            موقع معتمد على Google Maps
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+            بالقرب من مطار القاهرة 📍 معتمد على Google Maps
           </span>
         </div>
       </div>

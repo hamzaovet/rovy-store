@@ -17,6 +17,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Navigation,
+  ImageDown,
 } from "lucide-react";
 import InstagramIcon from "../../components/InstagramIcon";
 
@@ -27,7 +28,7 @@ export default function VipCardPage() {
   const cardRef = useRef<HTMLDivElement>(null);
 
   const webUrl = "https://rovy-store.vercel.app";
-  const apkUrl = "https://github.com/hamzaovet/rovy-store/releases/download/v1.0.0/rovy-store.apk";
+  const apkUrl = "https://rovy-store.vercel.app/downloads/rovy-store.apk";
   const mapsUrl = settings.googleMapsUrl || "https://maps.app.goo.gl/z2QCHZzSuJaaNHPV7";
 
   const handlePrint = () => {
@@ -40,14 +41,14 @@ export default function VipCardPage() {
       <div className="text-center max-w-xl mx-auto space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold">
           <Sparkles size={14} className="text-amber-400" />
-          <span>{isAr ? "كارت المتجر الرسمي الفاخر (VIP Card)" : "Official VIP Store Card"}</span>
+          <span>{isAr ? "كارت المتجر الرسمي الفاخر (VIP Privilege)" : "Official VIP Store Card"}</span>
         </div>
         <h1 className="font-serif font-black text-3xl sm:text-4xl text-gold-gradient">
           {isAr ? "كارت روفي ستور — بطاقة العطور الملكية" : "Rovy Store — Haute Parfumerie Card"}
         </h1>
         <p className="text-xs text-zinc-400">
           {isAr
-            ? "يحتوي على 2 كيو ار كود: كود مباشر لزيارة الموقع، وكود فوري لتحميل تطبيق الأندرويد الرسمي مع اللوكيشن وبيانات التواصل المعتمدة."
+            ? "بطاقة المتجر الرسمية الفاخرة المعتمدة — تحتوي على 2 كيو ار كود: كود مباشر لزيارة الموقع، وكود فوري لتحميل تطبيق الأندرويد مع بيانات التواصل واللوكيشن."
             : "Features Dual QR Codes: Instant Website Access & Direct Android APK Download."}
         </p>
       </div>
@@ -56,7 +57,7 @@ export default function VipCardPage() {
       <div
         ref={cardRef}
         id="vip-card"
-        className="relative max-w-2xl mx-auto rounded-3xl p-8 sm:p-10 border border-amber-500/40 bg-gradient-to-br from-[#120e1f] via-[#090710] to-[#040306] shadow-[0_0_50px_rgba(245,158,11,0.15)] overflow-hidden space-y-8"
+        className="relative max-w-2xl mx-auto rounded-3xl p-8 sm:p-10 border-2 border-amber-500/40 bg-gradient-to-br from-[#120e1f] via-[#090710] to-[#040306] shadow-[0_0_60px_rgba(245,158,11,0.18)] overflow-hidden space-y-8"
       >
         {/* Glow ambient background effects */}
         <div className="absolute -top-24 -left-24 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -79,7 +80,7 @@ export default function VipCardPage() {
           </div>
 
           <div className="text-end hidden sm:block">
-            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 border border-amber-500/30 text-amber-300">
+            <span className="px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-500/12 border border-amber-500/40 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
               VIP PRIVILEGE
             </span>
           </div>
@@ -88,73 +89,69 @@ export default function VipCardPage() {
         {/* Middle: Dual QR Codes Section */}
         <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
           {/* QR 1: Website */}
-          <div className="p-5 rounded-2xl bg-black/60 border border-amber-500/25 text-center space-y-3 shadow-lg">
+          <div className="p-5 rounded-2xl bg-black/60 border border-amber-500/25 text-center space-y-3 shadow-lg backdrop-blur-md">
             <div className="bg-white p-2.5 rounded-xl inline-block shadow-inner">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-                  webUrl
-                )}`}
+                src="/rovy-store-web-qr.png"
                 alt="Website QR"
-                className="w-36 h-36 mx-auto"
+                className="w-36 h-36 mx-auto block"
               />
             </div>
             <div>
-              <span className="text-[11px] font-bold text-amber-300 flex items-center justify-center gap-1">
-                <ExternalLink size={12} />
+              <span className="text-xs font-bold text-amber-300 flex items-center justify-center gap-1.5">
+                <ExternalLink size={13} />
                 <span>{isAr ? "كود زيارة الموقع الإلكتروني" : "Scan to Visit Website"}</span>
               </span>
-              <p className="text-[10px] text-zinc-400 mt-0.5 font-mono">
+              <p className="text-[11px] text-zinc-400 mt-1 font-mono">
                 rovy-store.vercel.app
               </p>
             </div>
           </div>
 
           {/* QR 2: Android APK */}
-          <div className="p-5 rounded-2xl bg-black/60 border border-amber-500/25 text-center space-y-3 shadow-lg">
+          <div className="p-5 rounded-2xl bg-black/60 border border-amber-500/25 text-center space-y-3 shadow-lg backdrop-blur-md">
             <div className="bg-white p-2.5 rounded-xl inline-block shadow-inner">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-                  apkUrl
-                )}`}
+                src="/rovy-store-apk-qr.png"
                 alt="Android APK QR"
-                className="w-36 h-36 mx-auto"
+                className="w-36 h-36 mx-auto block"
               />
             </div>
             <div>
-              <span className="text-[11px] font-bold text-emerald-400 flex items-center justify-center gap-1">
-                <Download size={12} />
+              <span className="text-xs font-bold text-emerald-400 flex items-center justify-center gap-1.5">
+                <Download size={13} />
                 <span>{isAr ? "كود تحميل تطبيق الأندرويد" : "Scan to Download Android APK"}</span>
               </span>
-              <p className="text-[10px] text-zinc-400 mt-0.5 font-mono">
+              <p className="text-[11px] text-zinc-400 mt-1 font-mono">
                 rovy-store.apk (v1.0.0)
               </p>
             </div>
           </div>
         </div>
 
-        {/* Bottom Contacts & Location */}
+        {/* Bottom Contacts & Location - Fully Unclipped */}
         <div className="relative z-10 border-t border-amber-500/20 pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-zinc-300 text-center sm:text-start">
           <div className="flex flex-col items-center sm:items-start gap-1">
             <div className="flex items-center gap-2">
-              <Phone size={15} className="text-amber-400 shrink-0" />
-              <span className="font-mono font-bold text-zinc-100">
+              <Phone size={16} className="text-amber-400 shrink-0" />
+              <span className="font-mono font-bold text-zinc-100 text-sm">
                 {settings.hotline || "01503012856"}
               </span>
             </div>
             {settings.secondaryPhone && (
-              <span className="font-mono text-[11px] text-zinc-400 pr-5">
+              <span className="font-mono text-xs text-amber-300/80 pr-6">
                 واتس وأوردرات: {settings.secondaryPhone}
               </span>
             )}
           </div>
 
           <div className="flex items-center justify-center sm:justify-start gap-2">
-            <InstagramIcon size={15} className="text-amber-400 shrink-0" />
+            <InstagramIcon size={16} className="text-amber-400 shrink-0" />
             <a
               href={`https://www.instagram.com/${settings.instagramHandle || "rovystore2"}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium hover:text-amber-400 transition"
+              className="font-bold hover:text-amber-400 transition text-zinc-100"
             >
               @{settings.instagramHandle || "rovystore2"}
             </a>
@@ -165,16 +162,16 @@ export default function VipCardPage() {
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 hover:text-amber-400 transition"
+              className="flex items-start gap-2 hover:text-amber-400 transition text-start"
             >
-              <MapPin size={15} className="text-amber-400 shrink-0" />
-              <span className="text-[11px] line-clamp-1 underline decoration-amber-500/40">
-                {isAr ? (settings.addressAr || "مصر الجديدة — طريق العروبة ومساكن شيراتون (بالقرب من مطار القاهرة)") : settings.addressEn}
+              <MapPin size={16} className="text-amber-400 shrink-0 mt-0.5" />
+              <span className="text-xs font-semibold leading-relaxed text-zinc-100">
+                {isAr ? (settings.addressAr || "مصر الجديدة — طريق العروبة ومساكن شيراتون") : settings.addressEn}
               </span>
             </a>
-            <span className="text-[10px] text-emerald-400/80 pr-5 flex items-center gap-1">
-              <Navigation size={10} />
-              <span>موقع معتمد على Google Maps</span>
+            <span className="text-[11px] text-emerald-400 font-bold pr-6 flex items-center gap-1">
+              <Navigation size={11} />
+              <span>بالقرب من مطار القاهرة 📍 Google Maps</span>
             </span>
           </div>
         </div>
@@ -182,28 +179,38 @@ export default function VipCardPage() {
 
       {/* Action Controls */}
       <div className="flex flex-wrap items-center justify-center gap-4">
+        {/* Download Ultra-HD Card Image */}
+        <a
+          href="/rovy-store-official-card.png"
+          download="rovy-store-official-card.png"
+          className="py-3 px-6 rounded-xl btn-gold text-xs font-black flex items-center gap-2 shadow-xl hover:scale-105 transition"
+        >
+          <ImageDown size={16} />
+          <span>{isAr ? "تحميل صورة الكارت عالية الدقة (VIP Ultra-HD PNG) 👑" : "Download Ultra-HD Card PNG"}</span>
+        </a>
+
         <button
           onClick={handlePrint}
-          className="py-3 px-6 rounded-xl btn-gold text-xs font-bold flex items-center gap-2 shadow-xl"
+          className="py-3 px-6 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-2 shadow-xl hover:bg-amber-500/25 transition"
         >
           <Printer size={16} />
-          <span>{isAr ? "طباعة الكارت الفاخر" : "Print VIP Card"}</span>
+          <span>{isAr ? "طباعة الكارت" : "Print Card"}</span>
         </button>
 
         <a
           href={mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="py-3 px-6 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold hover:bg-amber-500/25 transition flex items-center gap-2"
+          className="py-3 px-6 rounded-xl bg-zinc-900 border border-amber-500/30 text-amber-300 text-xs font-bold hover:bg-zinc-800 transition flex items-center gap-2"
         >
           <MapPin size={16} />
-          <span>{isAr ? "فتح موقعنا على خرائط جوجل 📍" : "Open on Google Maps"}</span>
+          <span>{isAr ? "فتح اللوكيشن على خرائط جوجل 📍" : "Open on Google Maps"}</span>
         </a>
 
         <a
-          href="/api/download/apk"
+          href="/downloads/rovy-store.apk"
           download="rovy-store.apk"
-          className="py-3 px-6 rounded-xl bg-zinc-900 border border-amber-500/30 text-emerald-400 text-xs font-bold hover:bg-zinc-800 transition flex items-center gap-2"
+          className="py-3 px-6 rounded-xl bg-zinc-900 border border-emerald-500/40 text-emerald-400 text-xs font-bold hover:bg-zinc-800 transition flex items-center gap-2"
         >
           <Download size={16} />
           <span>{isAr ? "تحميل ملف APK مباشرة" : "Direct Download APK"}</span>
